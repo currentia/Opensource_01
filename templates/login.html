@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2 style="margin-bottom: 30px;">로그인</h2>
+        <div class="login-box">
+            <div class="input-group">
+                <input type="text" id="userId" placeholder="아이디">
+                <input type="password" id="userPw" placeholder="비밀번호">
+            </div>
+            <button class="login-btn" onclick="handleLogin()" style="height: 95px;">로그인</button>
+        </div>
+        <div class="footer-links">
+            <span onclick="goToSignup()" style="cursor:pointer">회원가입</span> | 
+            <span style="cursor:pointer">아이디/비밀번호 찾기</span>
+        </div>
+    </div>
+
+    <script src="../static/js/script.js"></script>
+</body>
+</html>
