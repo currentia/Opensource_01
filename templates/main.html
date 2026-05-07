@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>메인</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+    <div style="width: 1200px; margin: 20px auto 0 auto; text-align: right;">
+        <button class="login-btn" onclick="goToLogin()">로그인 하기</button>
+    </div>
+
+    <div class="calendar-container">
+        <h2 style="text-align: center; margin-bottom: 15px;">5월</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="color: red;">일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th style="color: blue;">토</th>
+                </tr>
+            </thead>
+            <tbody id="calendarBody"></tbody>
+        </table>
+    </div>
+
+    <script src="../static/js/script.js"></script>
+</body>
+</html>
