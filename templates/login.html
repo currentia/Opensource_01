@@ -1,12 +1,7 @@
-<!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>로그인</title>
-    <link rel="stylesheet" href="../static/css/style.css">
-</head>
 <body>
-    <h1>로그인</h1>
+
+<h1>로그인</h1>
 
 <form method="POST">
     {% csrf_token %}
@@ -18,9 +13,10 @@
 </form>
 
 {% if error %}
-    <p style="color:red;">{{ error }}</p>
+<p style="color:red;">{{ error }}</p>
 {% endif %}
 
-<a href="/register/">회원가입</a> | 아이디/비밀번호 찾기
+<a href="/register/">회원가입</a>
+
 </body>
 </html>

@@ -7,10 +7,9 @@ def login_view(request):
         user_id = request.POST.get('user_id')
         user_pw = request.POST.get('user_pw')
 
-        try:
-            user = User.objects.get(user_id=user_id, user_pw=user_pw)
+        if User.objects.filter(user_id=user_id, user_pw=user_pw).exists():
             return redirect('/main/')
-        except User.DoesNotExist:
+        else:
             return render(request, 'login.html', {
                 'error': '아이디 또는 비밀번호가 틀렸습니다.'
             })
@@ -23,7 +22,7 @@ def register_view(request):
         user_id = request.POST.get('user_id')
         user_pw = request.POST.get('user_pw')
 
-        if user_id == '' or user_pw == '':
+        if not user_id or not user_pw:
             return render(request, 'register.html', {
                 'error': '아이디와 비밀번호를 모두 입력해주세요.'
             })
@@ -36,7 +35,7 @@ def register_view(request):
         User.objects.create(user_id=user_id, user_pw=user_pw)
 
         return render(request, 'register.html', {
-            'success': '회원가입이 완료되었습니다. 로그인 화면으로 돌아가세요.'
+            'success': '회원가입 완료!'
         })
 
     return render(request, 'register.html')
@@ -44,3 +43,7 @@ def register_view(request):
 
 def main_view(request):
     return render(request, 'main.html')
+
+
+def logout_view(request):
+    return redirect('/')
