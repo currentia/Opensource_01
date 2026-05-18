@@ -46,3 +46,51 @@ function createCalendar() {
 }
 
 window.onload = createCalendar;
+
+
+// 기존 코드들은 그대로 두시고, 맨 아래에 추가하세요!
+
+function handleSignup() {
+    const name = document.getElementById('newName').value;
+    if(name === "") {
+        alert("이름을 입력해주세요!");
+    } else {
+        alert(name + "님, 회원가입이 완료되었습니다!");
+        window.location.href = "login.html"; // 가입 성공하면 로그인창으로 이동
+    }
+}
+
+// 로그인창에서 '회원가입' 글자를 눌렀을 때 이동하는 기능 수정
+function goToSignup() {
+    window.location.href = "signup.html";
+}// 기존 코드들은 그대로 두시고, 맨 아래에 추가하세요!
+
+function handleSignup() {
+    const name = document.getElementById('newName').value;
+    if(name === "") {
+        alert("이름을 입력해주세요!");
+    } else {
+        alert(name + "님, 회원가입이 완료되었습니다!");
+        window.location.href = "login.html"; // 가입 성공하면 로그인창으로 이동
+    }
+}
+
+// 로그인창에서 '회원가입' 글자를 눌렀을 때 이동하는 기능 수정
+function goToSignup() {
+    window.location.href = "signup.html";
+}// 기존 코드들은 그대로 두시고, 맨 아래에 추가하세요!
+
+function handleSignup() {
+    const name = document.getElementById('newName').value;
+    if(name === "") {
+        alert("이름을 입력해주세요!");
+    } else {
+        alert(name + "님, 회원가입이 완료되었습니다!");
+        window.location.href = "login.html"; // 가입 성공하면 로그인창으로 이동
+    }
+}
+
+// 로그인창에서 '회원가입' 글자를 눌렀을 때 이동하는 기능 수정
+function goToSignup() {
+    window.location.href = "signup.html";
+}
