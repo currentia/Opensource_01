@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2 style="margin-bottom: 30px; text-align: center;">회원가입</h2>
+        
+        <div class="input-group" style="margin-bottom: 20px;">
+            <input type="text" id="newName" placeholder="이름 입력">
+            <input type="text" id="newId" placeholder="아이디 입력">
+            <input type="password" id="newPw" placeholder="비밀번호 입력">
+            <input type="password" id="confirmPw" placeholder="비밀번호 확인">
+            </div>
+
+        <button class="login-btn" onclick="handleSignup()" style="width: 100%; height: 50px;">가입하기</button>
+
+        <div class="footer-links" style="margin-top: 20px;">
+            <span onclick="history.back()" style="cursor:pointer; color: #666;">뒤로 가기</span>
+        </div>
+    </div>
+
+    <script src="../static/js/script.js"></script>
+</body>
+</html>
