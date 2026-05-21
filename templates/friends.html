@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>친구관리</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <style>
+        .tab-menu { display: flex; justify-content: space-around; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+        .tab-item { padding: 15px 0; cursor: pointer; width: 100%; text-align: center; font-weight: bold; color: #666; }
+        .tab-item.active { color: #333; border-bottom: 3px solid #333; }
+        .content-section { padding: 20px; background-color: #f9f9f9; border-radius: 10px; min-height: 250px; }
+        
+        .input-group { 
+            display: flex; 
+            flex-direction: row; 
+            align-items: center; 
+            gap: 10px; 
+            margin-top: 10px;
+        }
+
+        .input-group input { width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+
+        .small-btn { 
+            padding: 8px 15px; width: auto; cursor: pointer; border-radius: 4px; 
+            border: 1px solid #333; background: white; font-weight: bold;
+            font-size: 13px; white-space: nowrap;
+        }
+        .small-btn:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+    <div style="width: 600px; margin: 50px auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <div class="tab-menu">
+            <div id="tab-friends" class="tab-item" onclick="showTab('friends-list')">친구 목록</div>
+            <div id="tab-group" class="tab-item" onclick="showTab('group-list')">모임</div>
+            <div id="tab-request" class="tab-item active" onclick="showTab('request-list')">친구 요청</div>
+        </div>
+
+        <div id="content" class="content-section">
+            <div id="request-area">
+                <h4 style="margin: 0; text-align: left;">📩 친구 요청 보내기</h4>
+                <div class="input-group">
+                    <input type="text" id="friendId" placeholder="아이디 입력">
+                    <button class="small-btn" onclick="sendRequest()">요청하기</button>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #ddd; margin: 25px 0;">
+                <h4 style="margin: 0; text-align: left;">📥 친구 요청 받기</h4>
+                <div id="received-requests" style="text-align: center; margin-top: 20px;">
+                    <p style="color: #999; font-size: 14px;">받은 요청이 없습니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <button class="dropbtn" onclick="history.back()">뒤로 가기</button>
+        </div>
+    </div>
+
+    <script>
+        function showTab(type) {
+            // 1. 모든 탭에서 active(진한 선) 제거
+            const tabs = document.querySelectorAll('.tab-item');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // 2. 클릭한 탭에 active 추가 (id를 이용해 더 정확하게!)
+            if(type === 'friends-list') document.getElementById('tab-friends').classList.add('active');
+            if(type === 'group-list') document.getElementById('tab-group').classList.add('active');
+            if(type === 'request-list') document.getElementById('tab-request').classList.add('active');
+
+            const content = document.getElementById('content');
+            
+            // 3. 탭에 따라 내용 갈아끼우기
+            if (type === 'request-list') {
+                // 친구 요청 탭을 누르면 입력창 뭉치를 다시 그려줌!
+                content.innerHTML = `
+                    <div id="request-area">
+                        <h4 style="margin: 0; text-align: left;">📩 친구 요청 보내기</h4>
+                        <div class="input-group">
+                            <input type="text" id="friendId" placeholder="아이디 입력">
+                            <button class="small-btn" onclick="sendRequest()">요청하기</button>
+                        </div>
+                        <hr style="border: 0; border-top: 1px solid #ddd; margin: 25px 0;">
+                        <h4 style="margin: 0; text-align: left;">📥 받은 친구 요청</h4>
+                        <div id="received-requests" style="text-align: center; margin-top: 20px;">
+                            <p style="color: #999; font-size: 14px;">받은 요청이 없습니다.</p>
+                        </div>
+                    </div>`;
+            } else if (type === 'friends-list') {
+                content.innerHTML = `<p style="text-align:center; padding-top:50px;">등록된 친구가 없습니다.</p>`;
+            } else if (type === 'group-list') {
+                content.innerHTML = `<p style="text-align:center; padding-top:50px;">진행 중인 모임이 없습니다.</p>`;
+            }
+        }
+
+        function sendRequest() {
+            const id = document.getElementById('friendId').value;
+            if (id === "") {
+                alert("아이디를 입력해주세요!");
+                return;
+            }
+            alert(id + "님에게 친구 요청을 보냈습니다!");
+            document.getElementById('friendId').value = "";
+        }
+    </script>
+</body>
+</html>
