@@ -8,7 +8,8 @@ def login_view(request):
         user_pw = request.POST.get('user_pw')
 
         if User.objects.filter(user_id=user_id, user_pw=user_pw).exists():
-            return redirect('/main/')
+           request.session['user_id'] = user_id
+           return redirect('/main/')
         else:
             return render(request, 'login.html', {
                 'error': '아이디 또는 비밀번호가 틀렸습니다.'
@@ -47,3 +48,39 @@ def main_view(request):
 
 def logout_view(request):
     return redirect('/')
+from .models import Friend
+
+
+def friend_view(request):
+    user_id = request.session.get('user_id')
+
+    if not user_id:
+        return redirect('/')
+
+    user = User.objects.get(user_id=user_id)
+    message = None
+
+    if request.method == "POST":
+        friend_id = request.POST.get("friend_id")
+
+        if friend_id == user.user_id:
+            message = "자기 자신은 친구로 추가할 수 없습니다."
+
+        elif not User.objects.filter(user_id=friend_id).exists():
+            message = "존재하지 않는 아이디입니다."
+
+        else:
+            friend_user = User.objects.get(user_id=friend_id)
+
+            if Friend.objects.filter(user=user, friend=friend_user).exists():
+                message = "이미 추가된 친구입니다."
+            else:
+                Friend.objects.create(user=user, friend=friend_user)
+                message = "친구가 추가되었습니다."
+
+    friends = Friend.objects.filter(user=user).distinct()
+
+    return render(request, "friend.html", {
+        "friends": friends,
+        "message": message
+    })
