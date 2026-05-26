@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>친구 — MoneyMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'friends/css/friend.css' %}">
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="header">
+  <a href="{% url 'ledger:main' %}" class="logo">
+    <i class="ti ti-wallet"></i>
+    MoneyMate
+  </a>
+  <a href="{% url 'ledger:main' %}" class="back-btn">
+    <i class="ti ti-arrow-left"></i>
+    돌아가기
+  </a>
+</header>
+
+<div class="container">
+
+  <!-- ── 1. 친구 검색 및 요청 ── -->
+  <div class="section-card">
+    <p class="section-title">
+      <i class="ti ti-user-search"></i>
+      친구 추가
+    </p>
+    <form method="POST" action="{% url 'friends:send_request' %}">
+      {% csrf_token %}
+      <div class="search-row">
+        <input
+          type="text"
+          name="username"
+          class="search-input"
+          placeholder="친구의 아이디를 입력하세요"
+          autocomplete="off"
+        >
+        <button type="submit" class="search-btn">요청 보내기</button>
+      </div>
+      {% if error %}
+        <p class="error-msg">{{ error }}</p>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- ── 2. 받은 친구 요청 ── -->
+  <div class="section-card">
+    <p class="section-title">
+      <i class="ti ti-bell"></i>
+      받은 친구 요청
+      {% if pending_requests %}
+        ({{ pending_requests|length }})
+      {% endif %}
+    </p>
+
+    {% if pending_requests %}
+      {% for req in pending_requests %}
+        <div class="request-item">
+          <span class="request-name">
+            <i class="ti ti-user"></i>
+            {{ req.from_user.name }} ({{ req.from_user.username }})
+          </span>
+          <div class="request-actions">
+            <form method="POST" action="{% url 'friends:accept_request' req.id %}" style="margin:0;">
+              {% csrf_token %}
+              <button type="submit" class="btn-accept">수락</button>
+            </form>
+            <form method="POST" action="{% url 'friends:reject_request' req.id %}" style="margin:0;">
+              {% csrf_token %}
+              <button type="submit" class="btn-reject">거절</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-msg">받은 친구 요청이 없습니다.</p>
+    {% endif %}
+  </div>
+
+  <!-- ── 3. 친구 랭킹 ── -->
+  <div class="section-card">
+    <p class="section-title">
+      <i class="ti ti-trophy"></i>
+      친구 랭킹
+    </p>
+
+    {% if ranking %}
+      {% for item in ranking %}
+        <div class="rank-item">
+          <div class="rank-num
+            {% if forloop.counter == 1 %}first
+            {% elif forloop.counter == 2 %}second
+            {% elif forloop.counter == 3 %}third
+            {% elif item.user == request.user %}me
+            {% endif %}">
+            {{ forloop.counter }}
+          </div>
+          <div class="rank-info">
+            <span class="rank-name">
+              {{ item.user.name }}
+              {% if item.user == request.user %}
+                <span class="rank-me-label">나</span>
+              {% endif %}
+            </span>
+          </div>
+          <span class="rank-score">{{ item.score }}점</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-msg">친구를 추가하면 랭킹이 표시됩니다.</p>
+    {% endif %}
+  </div>
+
+  <!-- ── 4. 친구 목록 ── -->
+  <div class="section-card">
+    <p class="section-title">
+      <i class="ti ti-users"></i>
+      친구 목록 ({{ friends_with_score|length }})
+    </p>
+
+    {% if friends_with_score %}
+      {% for item in friends_with_score %}
+        <div class="friend-item">
+          <div class="friend-avatar">
+            <i class="ti ti-user"></i>
+          </div>
+          <div class="friend-info">
+            <p class="friend-name">
+              {{ item.user.name }} ({{ item.user.username }})
+            </p>
+          </div>
+          <div class="status-dot
+            {% if item.score >= 60 %}achieved{% else %}not-achieved{% endif %}">
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-msg">아직 친구가 없습니다.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+</body>
+</html>
