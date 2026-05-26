@@ -37,7 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'config',
+    'ledger',
+    'accounts',
+    'friends',
+    'groups',
+    # 'alerts', #alerts 기능은 클라이언트 사이드에서 js로 구현 예정
 ]
 
 MIDDLEWARE = [
@@ -76,9 +80,15 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3', # MySQL 대신 SQLite 사용
     }
 }
+
+# 커스텀 User 모델
+AUTH_USER_MODEL = 'accounts.User'
+
+# 로그인 URL
+LOGIN_URL = 'accounts:login'
 
 
 # Password validation
@@ -103,9 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ko-kr'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
@@ -115,9 +125,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# static 폴더가 앱 외부에 있을 경우 추가
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 서버 재시작시, 세션 만료 시키는 방법
+# SESSION_COOKIE_AGE = 3600        # 1시간 후 세션 만료 (초 단위)
+# SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # 브라우저 닫으면 세션 만료

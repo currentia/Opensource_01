@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'ledger/css/main.css' %}">
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="header">
+  <a href="{% url 'ledger:main' %}" class="logo"> <!--자바스크립트로 구현해주시면 됩니다. 이 문법은 django 템플릿이라 나중에 합치면 조금만 수정하면 되는 거라 신경 안 쓰셔도 돼요.--> 
+    <i class="ti ti-wallet"></i>
+    MoneyMate
+  </a>
+
+  <nav class="header-nav">
+    <!-- 모임 버튼 (추후 groups 앱 연결) -->
+    <a href="#" class="nav-btn">
+      <i class="ti ti-users"></i>
+      모임
+    </a>
+
+    <!-- 친구 버튼 -->
+    <a href="{% url 'friends:friend_main' %}" class="nav-btn">
+      <i class="ti ti-user-plus"></i>
+      친구
+    </a>
+
+    <!-- 로그아웃 -->
+    <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="ti ti-logout"></i>
+        로그아웃
+      </button>
+    </form>
+  </nav>
+</header>
+
+<!-- ── 메인 컨테이너 ── -->
+<div class="container">
+
+  <!-- 인사말 -->
+  <p class="greeting">안녕하세요, <strong>{{ user.name }}</strong>님 👋</p>
+
+  <!-- 요약 카드 -->
+  <div class="summary-grid">
+
+    <div class="summary-card">
+      <p class="summary-label">이번 달 지출</p>
+      <p class="summary-value red">{{ total_spent|default:0 }}</p>
+      <p class="summary-unit">원</p>
+    </div>
+
+    <div class="summary-card">
+      <p class="summary-label">일 목표 금액</p>
+      <p class="summary-value green">{{ user.daily_budget }}</p>
+      <p class="summary-unit">원</p>
+    </div>
+
+    <div class="summary-card">
+      <p class="summary-label">현재 점수</p>
+      <p class="summary-value score">{{ score|default:60 }}</p>
+      <p class="summary-unit">점</p>
+    </div>
+
+  </div>
+
+  <!-- 캘린더 -->
+  <div class="cal-card">
+
+    <div class="cal-header">
+      <span class="cal-title" id="cal-title"></span>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)" aria-label="이전 달">
+          <i class="ti ti-chevron-left"></i>
+        </button>
+        <button class="cal-nav-btn" onclick="changeMonth(1)" aria-label="다음 달">
+          <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="days-row">
+      <div class="day-label sun">일</div>
+      <div class="day-label">월</div>
+      <div class="day-label">화</div>
+      <div class="day-label">수</div>
+      <div class="day-label">목</div>
+      <div class="day-label">금</div>
+      <div class="day-label sat">토</div>
+    </div>
+
+    <div class="cal-grid" id="cal-grid"></div>
+
+  </div>
+</div>
+
+<!-- 지출 데이터를 JS로 전달 -->
+<script>
+  window.SPENDING_DATES = {{ spending_dates_json|safe }};
+</script>
+<script src="{% static 'ledger/js/main.js' %}"></script>
+
+</body>
+</html>

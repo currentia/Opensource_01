@@ -1,0 +1,181 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --green-600: #0F6E56;
+  --green-500: #1D9E75;
+  --green-100: #9FE1CB;
+  --green-50:  #E1F5EE;
+  --gray-900:  #2C2C2A;
+  --gray-600:  #5F5E5A;
+  --gray-200:  #B4B2A9;
+  --gray-100:  #D3D1C7;
+  --gray-50:   #F1EFE8;
+  --red-400:   #E24B4A;
+  --blue-400:  #378ADD;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+body {
+  font-family: 'Gowun Dodum', sans-serif;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+/* ── 레이아웃 ── */
+.container {
+  width: 100%;
+  max-width: 420px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gray-900);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.logo i {
+  font-size: 24px;
+  color: var(--green-500);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: 6px;
+}
+
+.card {
+  background: #ffffff;
+  border: 0.5px solid var(--gray-100);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
+/* ── 캘린더 헤더 ── */
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.cal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.cal-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.nav-btn {
+  width: 30px;
+  height: 30px;
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-600);
+  font-size: 15px;
+  transition: background 0.15s;
+}
+
+.nav-btn:hover {
+  background: var(--gray-50);
+}
+
+/* ── 캘린더 그리드 ── */
+.days-row,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.days-row {
+  margin-bottom: 4px;
+}
+
+.day-label {
+  text-align: center;
+  font-size: 11px;
+  color: var(--gray-600);
+  padding: 4px 0;
+}
+
+.day-label.sun { color: var(--red-400); }
+.day-label.sat { color: var(--blue-400); }
+
+.cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  border-radius: 50%;
+  color: var(--gray-900);
+  cursor: default;
+  transition: background 0.15s;
+}
+
+.cell.other-month { color: var(--gray-200); }
+.cell.sun-col     { color: var(--red-400); }
+.cell.sat-col     { color: var(--blue-400); }
+.cell.today       { background: var(--green-500); color: #fff; font-weight: 700; }
+
+.cell:not(.other-month):not(.today):hover {
+  background: var(--green-50);
+}
+
+/* ── 구분선 ── */
+.divider {
+  height: 0.5px;
+  background: var(--gray-100);
+  margin: 1.25rem 0;
+}
+
+/* ── 로그인 버튼 ── */
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  background: var(--green-500);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-family: 'Gowun Dodum', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.login-btn:hover { background: var(--green-600); }
+.login-btn i     { font-size: 18px; }

@@ -1,12 +1,13 @@
 from django.contrib import admin
-from django.urls import path
-from .views import login_view, main_view, register_view, logout_view, friend_view
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', login_view),
-    path('main/', main_view),
-    path('register/', register_view),
-    path('logout/', logout_view),
-    path('friend/', friend_view),
+    # 사용자가 '/' 접근 시 → ledger 앱의 first 뷰로
+    path('', include('ledger.urls')),  # 맨처음 페이지
+    path('accounts/', include('accounts.urls')), # 로그인 페이지
+    path('friends/',  include('friends.urls')), # 친구 관련 페이지
+
+    # 추후 추가될 앱들 
+    # path('groups/',   include('groups.urls')),
 ]

@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyMate</title>
+
+  <!-- 외부 폰트 & 아이콘 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+  <!-- 페이지 전용 스타일 -->
+  <link rel="stylesheet" href="{% static 'ledger/css/first.css' %}">
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <div class="logo">
+      <i class="ti ti-wallet"></i>
+      MoneyMate
+    </div>
+    <p class="subtitle">함께하는 소비 관리</p>
+  </div>
+
+  <div class="card">
+
+    <!-- 캘린더 헤더 -->
+    <div class="cal-header">
+      <span class="cal-title" id="cal-title"></span>
+      <div class="cal-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)" aria-label="이전 달">
+          <i class="ti ti-chevron-left"></i>
+        </button>
+        <button class="nav-btn" onclick="changeMonth(1)" aria-label="다음 달">
+          <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 요일 라벨 -->
+    <div class="days-row">
+      <div class="day-label sun">일</div>
+      <div class="day-label">월</div>
+      <div class="day-label">화</div>
+      <div class="day-label">수</div>
+      <div class="day-label">목</div>
+      <div class="day-label">금</div>
+      <div class="day-label sat">토</div>
+    </div>
+
+    <!-- 날짜 그리드 (JS로 렌더링) -->
+    <div class="cal-grid" id="cal-grid"></div>
+
+    <div class="divider"></div>
+
+    <!-- 로그인 버튼 -->
+    <a href="{% url 'accounts:login' %}" class="login-btn">
+      <i class="ti ti-login"></i>
+      로그인하기
+    </a>
+
+  </div>
+</div>
+
+<!-- 페이지 전용 스크립트 -->
+<script src="{% static 'ledger/js/first.js' %}"></script>
+
+</body>
+</html>
