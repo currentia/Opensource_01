@@ -16,37 +16,35 @@ def first(request):
 
 @login_required(login_url='accounts:login')
 def main(request):
-    user  = request.user
+    user = request.user
     today = date.today()
 
-    # 이번 달 지출 합계
-    total_spent = Ledger.objects.filter( # filter() -> 인번 연도, 이번 달 데이터만 필터링
+    total_spent = Ledger.objects.filter(
         user=user,
         date__year=today.year,
         date__month=today.month
-    ).aggregate(total=Sum('amount'))['total'] or 0 # 필터된 행의 amount를 합산, 이후 ['total']로 aggregate 결과 딕셔너리에서 값 추출
-                                                   # 데이터가 없으면 None이 반환되므로 0으로 대체
+    ).aggregate(total=Sum('amount'))['total'] or 0
 
-    # 현재 점수
-    score_obj, _ = UserScore.objects.get_or_create( # get_or_create() 는 조회 + 없으면 생성
-        user=user, defaults={'score': 60}
+    score_obj, _ = UserScore.objects.get_or_create(
+        user=user,
+        defaults={'score': 60}
     )
+
     score = score_obj.score
 
-    # 지출 내역이 있는 날짜 목록 (캘린더 점 표시용)
     spending_dates = {
-        str(d): True # date 객체를 문자열로 변환해서 딕셔너리 생성
+        str(d): True
         for d in Ledger.objects.filter(
             user=user,
             date__year=today.year,
             date__month=today.month
-        ).values_list('date', flat=True).distinct() # distinct() 중복 날짜 제거
+        ).values_list('date', flat=True).distinct()
     }
 
     context = {
-        'user':                user,
-        'total_spent':         total_spent,
-        'score':               score,
+        'user': user,
+        'total_spent': total_spent,
+        'score': score,
         'spending_dates_json': json.dumps(spending_dates, default=str),
     }
 
@@ -55,60 +53,108 @@ def main(request):
 
 @login_required(login_url='accounts:login')
 def detail(request, year, month, day):
-    user        = request.user
-    spent_date  = date(year, month, day) # /ledger/2026/5/26/ 형태라면 year=2026, month=5, day=26이 자동으로 들어옴
+    user = request.user
+    spent_date = date(year, month, day)
 
     if request.method == 'POST':
-        # 기존 해당 날짜 지출 전체 삭제 후 재저장
-        Ledger.objects.filter(user=user, date=spent_date).delete()
 
-        categories = request.POST.getlist('category') # 복수 데이터 수집
-        amounts    = request.POST.getlist('amount')
-        memos      = request.POST.getlist('memo')
+        Ledger.objects.filter(
+            user=user,
+            date=spent_date
+        ).delete()
 
-        for category, amount, memo in zip(categories, amounts, memos): # 순서대로 묶기
+        categories = request.POST.getlist('category')
+        amounts = request.POST.getlist('amount')
+        memos = request.POST.getlist('memo')
+
+        for category, amount, memo in zip(categories, amounts, memos):
+
             if amount and int(amount) > 0:
-                Ledger.objects.create( # 유효한 것만 저장
-                    user     = user,
-                    date     = spent_date,
-                    category = category,
-                    amount   = int(amount),
-                    memo     = memo,
+
+                Ledger.objects.create(
+                    user=user,
+                    date=spent_date,
+                    category=category,
+                    amount=int(amount),
+                    memo=memo,
                 )
 
-        # 총 지출 계산 후 달성 여부 기록 및 점수 업데이트
         total_spent = Ledger.objects.filter(
-            user=user, date=spent_date
+            user=user,
+            date=spent_date
         ).aggregate(total=Sum('amount'))['total'] or 0
 
-        record_achievement(user, spent_date, total_spent) # 저장 후 총 지출을 계산하여 record_achievement 서비스 함수로 넘김
+        record_achievement(
+            user,
+            spent_date,
+            total_spent
+        )
 
-        return redirect('ledger:detail', year=year, month=month, day=day)
+        return redirect(
+            'ledger:detail',
+            year=year,
+            month=month,
+            day=day
+        )
 
-    # GET: 해당 날짜 지출 내역 조회
-    ledgers = Ledger.objects.filter(user=user, date=spent_date)
+    ledgers = Ledger.objects.filter(
+        user=user,
+        date=spent_date
+    )
 
     total_spent = ledgers.aggregate(
         total=Sum('amount')
     )['total'] or 0
 
-    # 카테고리별 합계
     category_totals = {}
-    for choice in Ledger.CATEGORY_CHOICES: # CATEGORY_CHOICES는 Ledger 모델에 정의된 카테고리 목록
-        key   = choice[0]
+
+    for choice in Ledger.CATEGORY_CHOICES:
+
+        key = choice[0]
         label = choice[1]
-        total = ledgers.filter(category=key).aggregate(
+
+        total = ledgers.filter(
+            category=key
+        ).aggregate(
             total=Sum('amount')
         )['total'] or 0
-        category_totals[key] = {'label': label, 'total': total}
+
+        category_totals[key] = {
+            'label': label,
+            'total': total
+        }
+
+    # 소비 경보 기능 (김지안 작업)
+    if user.daily_budget and user.daily_budget > 0:
+
+        spending_ratio = total_spent / user.daily_budget
+
+        if spending_ratio >= 0.7:
+            warning_message = "지출이 목표 금액의 70%를 넘었습니다. 소비를 줄이는 것이 좋습니다."
+
+        elif spending_ratio >= 0.5:
+            warning_message = "지출이 목표 금액의 50%를 넘었습니다. 지출에 주의하세요."
+
+        else:
+            warning_message = "아직 지출 상태가 양호합니다."
+
+    else:
+        spending_ratio = 0
+        warning_message = "목표 금액이 설정되지 않았습니다."
 
     context = {
-        'user':             user,
-        'spent_date':       spent_date,
-        'ledgers':          ledgers,
-        'total_spent':      total_spent,
-        'category_totals':  category_totals,
-        'daily_budget':     user.daily_budget,
+        'user': user,
+        'spent_date': spent_date,
+        'ledgers': ledgers,
+        'total_spent': total_spent,
+        'category_totals': category_totals,
+        'daily_budget': user.daily_budget,
+        'warning_message': warning_message,
+        'spending_ratio': spending_ratio,
     }
 
-    return render(request, 'ledger/detail.html', context)
+    return render(
+        request,
+        'ledger/detail.html',
+        context
+    )

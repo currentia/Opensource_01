@@ -1,0 +1,37 @@
+<h1>모임 관리</h1>
+
+<h3>모임 생성</h3>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <input type="text"
+           name="name"
+           placeholder="모임 이름">
+
+    <input type="number"
+           name="target_budget"
+           placeholder="목표 예산">
+
+    <button type="submit">
+        생성
+    </button>
+</form>
+
+<hr>
+
+<h3>현재 모임 목록 ({{ groups.count }})</h3>
+<p>총 모임 수 : {{ groups.count }}</p>
+{% for group in groups %}
+    <p>
+        {{ group.name }}
+        /
+        목표예산 {{ group.target_budget }}원
+
+        <a href="/groups/delete/{{ group.id }}/">
+            삭제
+        </a>
+    </p>
+{% empty %}
+    <p>생성된 모임이 없습니다.</p>
+{% endfor %}
