@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyMate - 모임</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'groups/css/list.css' %}">
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="header">
+  <a href="{% url 'ledger:main' %}" class="logo">
+    <i class="ti ti-wallet"></i>
+    MoneyMate
+  </a>
+  <nav class="header-nav">
+    <a href="{% url 'groups:group_list' %}" class="nav-btn nav-btn--active">
+      <i class="ti ti-users"></i>
+      모임
+    </a>
+    <a href="{% url 'friends:friend_main' %}" class="nav-btn">
+      <i class="ti ti-user-plus"></i>
+      친구
+    </a>
+    <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="ti ti-logout"></i>
+        로그아웃
+      </button>
+    </form>
+  </nav>
+</header>
+
+<!-- ── 메인 컨테이너 ── -->
+<div class="container">
+
+  <!-- 상단 타이틀 -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">모임</h1>
+      <span class="group-count">{{ my_groups|length }}개 참여 중</span>
+    </div>
+    <a href="{% url 'groups:group_create' %}" class="btn-create">
+      <i class="ti ti-plus"></i>
+      새 모임 만들기
+    </a>
+  </div>
+
+  <!-- 받은 초대 알림 -->
+  {% if pending_invites %}
+  <div class="invite-section">
+    <p class="section-label">
+      <i class="ti ti-bell"></i>
+      받은 초대
+      <span class="invite-badge">{{ pending_invites|length }}</span>
+    </p>
+    <div class="invite-list">
+      {% for invite in pending_invites %}
+      <div class="invite-card">
+        <div class="invite-info">
+          <span class="invite-group-name">{{ invite.group.name }}</span>
+          <span class="invite-from">{{ invite.from_user.name }}님이 초대했습니다</span>
+          <span class="invite-dday">
+            <i class="ti ti-calendar-due"></i>
+            종료일 {{ invite.group.end_date }}
+          </span>
+        </div>
+        <div class="invite-actions">
+          <a href="{% url 'groups:group_invite_respond' invite.pk 'accept' %}" class="btn-accept">수락</a>
+          <a href="{% url 'groups:group_invite_respond' invite.pk 'reject' %}" class="btn-reject">거절</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 내 모임 목록 -->
+  {% if my_groups %}
+  <div class="group-grid">
+    {% for group in my_groups %}
+    <a href="{% url 'groups:group_detail' group.pk %}" class="group-card">
+      <div class="group-card__header">
+        <span class="group-name">{{ group.name }}</span>
+        {% if group.owner == request.user %}
+        <span class="badge-owner">모임장</span>
+        {% endif %}
+      </div>
+      <div class="group-card__meta">
+        <span class="meta-item">
+          <i class="ti ti-users"></i>
+          {{ group.members.count }} / {{ group.max_members }}명
+        </span>
+        <span class="meta-item">
+          <i class="ti ti-calendar-due"></i>
+          {{ group.end_date }}
+        </span>
+      </div>
+      <div class="group-card__footer">
+        <span class="dday-label">
+          <i class="ti ti-clock"></i>
+          D-{{ group.end_date|timeuntil }}
+        </span>
+        <i class="ti ti-chevron-right footer-arrow"></i>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- 빈 상태 -->
+  <div class="empty-state">
+    <i class="ti ti-users empty-icon"></i>
+    <p class="empty-title">아직 참여 중인 모임이 없어요</p>
+    <p class="empty-desc">새 모임을 만들거나 친구의 초대를 기다려 보세요</p>
+    <a href="{% url 'groups:group_create' %}" class="btn-create">
+      <i class="ti ti-plus"></i>
+      모임 만들기
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+</body>
+</html>

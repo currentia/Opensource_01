@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyMate - 모임 종료</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'groups/css/close_confirm.css' %}">
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="header">
+  <a href="{% url 'ledger:main' %}" class="logo">
+    <i class="ti ti-wallet"></i>
+    MoneyMate
+  </a>
+  <nav class="header-nav">
+    <a href="{% url 'groups:group_list' %}" class="nav-btn nav-btn--active">
+      <i class="ti ti-users"></i>
+      모임
+    </a>
+    <a href="{% url 'friends:friend_main' %}" class="nav-btn">
+      <i class="ti ti-user-plus"></i>
+      친구
+    </a>
+    <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="ti ti-logout"></i>
+        로그아웃
+      </button>
+    </form>
+  </nav>
+</header>
+
+<!-- ── 메인 컨테이너 ── -->
+<div class="container container--narrow">
+
+  <div class="page-header">
+    <a href="{% url 'groups:group_detail' group.pk %}" class="btn-back">
+      <i class="ti ti-arrow-left"></i>
+    </a>
+    <h1 class="page-title">모임 종료</h1>
+  </div>
+
+  <div class="confirm-card">
+    <i class="ti ti-alert-triangle confirm-icon"></i>
+    <p class="confirm-title">{{ group.name }}을(를) 종료할까요?</p>
+    <p class="confirm-desc">
+      종료 시 모든 멤버의 챌린지 달성률이 계산되어 점수가 최종 반영됩니다.<br>
+      이 작업은 되돌릴 수 없습니다.
+    </p>
+    <div class="confirm-actions">
+      <form method="POST" action="{% url 'groups:group_close' group.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">
+          <i class="ti ti-circle-check"></i>
+          종료하기
+        </button>
+      </form>
+      <a href="{% url 'groups:group_detail' group.pk %}" class="btn-cancel">취소</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

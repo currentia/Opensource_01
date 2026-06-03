@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyMate - {{ target_user.name }}님의 {{ ledger_date }} 지출</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'groups/css/member_ledger.css' %}">
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="header">
+  <a href="{% url 'ledger:main' %}" class="logo">
+    <i class="ti ti-wallet"></i>
+    MoneyMate
+  </a>
+  <nav class="header-nav">
+    <a href="{% url 'groups:group_list' %}" class="nav-btn nav-btn--active">
+      <i class="ti ti-users"></i>
+      모임
+    </a>
+    <a href="{% url 'friends:friend_main' %}" class="nav-btn">
+      <i class="ti ti-user-plus"></i>
+      친구
+    </a>
+    <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="ti ti-logout"></i>
+        로그아웃
+      </button>
+    </form>
+  </nav>
+</header>
+
+<!-- ── 메인 컨테이너 ── -->
+<div class="container container--narrow">
+
+  <!-- 상단 헤더 -->
+  <div class="page-header">
+    <a href="{% url 'groups:group_detail' group.pk %}" class="btn-back">
+      <i class="ti ti-arrow-left"></i>
+    </a>
+    <div class="page-header__info">
+      <h1 class="page-title">
+        {% if is_own %}내 지출 내역{% else %}{{ target_user.name }}님의 지출{% endif %}
+      </h1>
+      <span class="page-subtitle">
+        <i class="ti ti-calendar"></i>
+        {{ ledger_date }} · {{ group.name }}
+      </span>
+    </div>
+  </div>
+
+  <!-- 카테고리별 지출 합산 (게시글 본문) -->
+  <div class="ledger-post">
+    {% if category_summary %}
+    <div class="category-list">
+      {% for item in category_summary %}
+      <div class="category-row">
+        <span class="category-label">
+          {% if item.category == 'food' %}<i class="ti ti-tools-kitchen-2"></i>
+          {% elif item.category == 'transport' %}<i class="ti ti-bus"></i>
+          {% elif item.category == 'leisure' %}<i class="ti ti-device-gamepad"></i>
+          {% else %}<i class="ti ti-dots"></i>
+          {% endif %}
+          {{ item.label }}
+        </span>
+        <span class="category-amount">{{ item.total|floatformat:0 }}원</span>
+      </div>
+      {% endfor %}
+
+      <div class="category-row category-row--total">
+        <span class="category-label">
+          <i class="ti ti-sum"></i>
+          합계
+        </span>
+        <span class="category-amount total-amount">{{ total_spent|floatformat:0 }}원</span>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <i class="ti ti-receipt-off empty-icon"></i>
+      <p class="empty-title">해당 날짜의 지출 내역이 없습니다</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 댓글 목록 -->
+  <div class="comment-section">
+    <p class="section-label">
+      <i class="ti ti-message"></i>
+      댓글
+      <span class="comment-count">{{ feedbacks|length }}</span>
+    </p>
+
+    <div class="comment-list">
+      {% for fb in feedbacks %}
+      <div class="comment-item {% if fb.from_user == request.user %}comment-item--mine{% endif %}">
+        <div class="comment-header">
+          <span class="comment-author">
+            {{ fb.from_user.name }}
+            {% if fb.from_user == request.user %}
+            <span class="badge-me">나</span>
+            {% endif %}
+            {% if fb.from_user == target_user %}
+            <span class="badge-owner-comment">작성자</span>
+            {% endif %}
+          </span>
+          <span class="comment-time">{{ fb.created_at|date:"m.d H:i" }}</span>
+        </div>
+        <p class="comment-content">{{ fb.content }}</p>
+      </div>
+      {% empty %}
+      <p class="empty-desc">아직 댓글이 없습니다. 첫 번째로 의견을 남겨보세요!</p>
+      {% endfor %}
+    </div>
+
+    <!-- 댓글 작성 폼 -->
+    <form method="POST" action="{% url 'groups:feedback_create' group.pk %}" class="comment-form">
+      {% csrf_token %}
+      <input type="hidden" name="target_user_id" value="{{ target_user.pk }}">
+      <input type="hidden" name="ledger_date"    value="{{ ledger_date }}">
+      <div class="comment-input-row">
+        <input
+          type="text"
+          name="content"
+          class="form-input comment-input"
+          placeholder="{% if is_own %}내 지출에 메모를 남겨보세요{% else %}{{ target_user.name }}님의 지출에 의견을 남겨보세요{% endif %}"
+          maxlength="200"
+          required
+          autocomplete="off"
+        >
+        <button type="submit" class="btn-comment-submit">
+          <i class="ti ti-send"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+</body>
+</html>
