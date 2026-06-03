@@ -7,7 +7,6 @@ urlpatterns = [
     path('', include('ledger.urls')),  # 맨처음 페이지
     path('accounts/', include('accounts.urls')), # 로그인 페이지
     path('friends/',  include('friends.urls')), # 친구 관련 페이지
+    path('groups/', include('groups.urls')),
 
-    # 추후 추가될 앱들 
-    # path('groups/',   include('groups.urls')),
 ]

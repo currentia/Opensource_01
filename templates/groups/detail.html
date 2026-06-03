@@ -1,0 +1,250 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyMate - {{ group.name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'groups/css/detail.css' %}">
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="header">
+  <a href="{% url 'ledger:main' %}" class="logo">
+    <i class="ti ti-wallet"></i>
+    MoneyMate
+  </a>
+  <nav class="header-nav">
+    <a href="{% url 'groups:group_list' %}" class="nav-btn nav-btn--active">
+      <i class="ti ti-users"></i>
+      모임
+    </a>
+    <a href="{% url 'friends:friend_main' %}" class="nav-btn">
+      <i class="ti ti-user-plus"></i>
+      친구
+    </a>
+    <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="ti ti-logout"></i>
+        로그아웃
+      </button>
+    </form>
+  </nav>
+</header>
+
+<!-- ── 메인 컨테이너 ── -->
+<div class="container">
+
+  <!-- 상단 헤더 -->
+  <div class="page-header">
+    <a href="{% url 'groups:group_list' %}" class="btn-back">
+      <i class="ti ti-arrow-left"></i>
+    </a>
+    <h1 class="page-title">{{ group.name }}</h1>
+    {% if is_owner %}
+    <a href="{% url 'groups:group_close' group.pk %}" class="btn-close-group">
+      <i class="ti ti-door-exit"></i>
+      모임 종료
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- 요약 카드 (D-day + 스트릭) -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <p class="summary-label">
+        <i class="ti ti-clock"></i>
+        종료까지
+      </p>
+      {% if d_day >= 0 %}
+      <p class="summary-value summary-value--dday">D-{{ d_day }}</p>
+      {% else %}
+      <p class="summary-value summary-value--ended">종료됨</p>
+      {% endif %}
+      <p class="summary-unit">{{ group.end_date }}</p>
+    </div>
+    <div class="summary-card">
+      <p class="summary-label">
+        <i class="ti ti-flame"></i>
+        내 연속 달성
+      </p>
+      {% if streak_info.streak_achieved > 0 %}
+      <p class="summary-value summary-value--streak">{{ streak_info.streak_achieved }}일</p>
+      <p class="summary-unit streak-achieved">연속 달성 중 🔥</p>
+      {% elif streak_info.streak_failed > 0 %}
+      <p class="summary-value summary-value--fail">{{ streak_info.streak_failed }}일</p>
+      <p class="summary-unit streak-failed">연속 미달성</p>
+      {% else %}
+      <p class="summary-value">-</p>
+      <p class="summary-unit">기록 없음</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 멤버 랭킹 -->
+  <div class="section">
+    <p class="section-label">
+      <i class="ti ti-trophy"></i>
+      멤버 랭킹
+    </p>
+    <div class="ranking-list">
+      {% for item in ranking %}
+      <div class="ranking-item {% if item.user == request.user %}ranking-item--me{% endif %}">
+        <span class="rank-num
+          {% if item.rank == 1 %}rank-num--gold
+          {% elif item.rank == 2 %}rank-num--silver
+          {% elif item.rank == 3 %}rank-num--bronze
+          {% endif %}">{{ item.rank }}</span>
+        <span class="rank-name">
+          {{ item.user.name }}
+          {% if item.user == request.user %}
+          <span class="badge-me">나</span>
+          {% endif %}
+        </span>
+        <span class="rank-score">{{ item.score }}점</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 챌린지 (모임장만 추가/삭제 가능) -->
+  <div class="section">
+    <p class="section-label">
+      <i class="ti ti-target"></i>
+      챌린지
+    </p>
+
+    <!-- 기본 챌린지 -->
+    {% for challenge in challenges %}
+    <div class="challenge-card challenge-card--basic">
+      <span class="challenge-type">기본</span>
+      <span class="challenge-desc">
+        하루 {{ challenge.get_category_display }} 지출이 전체의
+        <strong>{{ challenge.ratio_limit|floatformat:0 }}%</strong> 이하면 달성
+      </span>
+    </div>
+    {% endfor %}
+
+    <!-- 커스텀 챌린지 -->
+    {% for challenge in custom_challenges %}
+    <div class="challenge-card challenge-card--custom">
+      <span class="challenge-type">커스텀</span>
+      <span class="challenge-desc">
+        하루 {{ challenge.get_category_display }}
+        <strong>{{ challenge.amount_limit|floatformat:0 }}원</strong> 이하면 달성
+        {% if challenge.description %}
+        <span class="challenge-note">— {{ challenge.description }}</span>
+        {% endif %}
+      </span>
+      {% if is_owner %}
+      <form method="POST" action="{% url 'groups:custom_challenge_delete' group.pk challenge.pk %}" class="challenge-delete-form">
+        {% csrf_token %}
+        <button type="submit" class="btn-delete-challenge" title="삭제">
+          <i class="ti ti-trash"></i>
+        </button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <!-- 커스텀 챌린지 추가 (모임장만) -->
+    {% if is_owner %}
+    <details class="challenge-add">
+      <summary class="challenge-add__trigger">
+        <i class="ti ti-plus"></i>
+        커스텀 챌린지 추가
+      </summary>
+      <form method="POST" action="{% url 'groups:custom_challenge_create' group.pk %}" class="challenge-form">
+        {% csrf_token %}
+        <select name="category" class="form-input form-input--sm" required>
+          <option value="">카테고리 선택</option>
+          <option value="food">식비</option>
+          <option value="transport">교통비</option>
+          <option value="leisure">여가비</option>
+          <option value="other">기타</option>
+        </select>
+        <input type="number" name="amount_limit" class="form-input form-input--sm" placeholder="하루 한도 금액 (원)" min="1" required>
+        <input type="text" name="description" class="form-input form-input--sm" placeholder="설명 (선택)" maxlength="100">
+        <button type="submit" class="btn-submit btn-submit--sm">추가</button>
+      </form>
+    </details>
+    {% endif %}
+  </div>
+
+  <!-- 친구 초대 (모임장 전용) -->
+  {% if is_owner %}
+  <div class="section">
+    <p class="section-label">
+      <i class="ti ti-user-plus"></i>
+      친구 초대
+    </p>
+    <form method="POST" action="{% url 'groups:group_invite' group.pk %}" class="invite-form">
+      {% csrf_token %}
+      <select name="to_user_id" class="form-input" required>
+        <option value="">초대할 친구 선택</option>
+        {% for friend_req in request.user.sent_requests.all %}
+          {% if friend_req.status == 'accepted' %}
+          <option value="{{ friend_req.to_user.pk }}">{{ friend_req.to_user.name }}</option>
+          {% endif %}
+        {% endfor %}
+        {% for friend_req in request.user.received_requests.all %}
+          {% if friend_req.status == 'accepted' %}
+          <option value="{{ friend_req.from_user.pk }}">{{ friend_req.from_user.name }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-submit btn-submit--sm">
+        <i class="ti ti-send"></i>
+        초대 보내기
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- 지출 내역 / 피드백 -->
+  <div class="section">
+    <p class="section-label">
+      <i class="ti ti-message"></i>
+      지출 내역 · 피드백
+    </p>
+    <p class="feedback-goto__desc">
+      멤버와 날짜를 선택하면 해당 날짜의 지출 내역과 댓글을 확인할 수 있습니다.<br>
+      본인 지출 내역도 확인 가능합니다.
+    </p>
+    <div class="feedback-goto__form">
+      <select id="feedback-target" class="form-input form-input--sm">
+        <option value="">멤버 선택</option>
+        {% for item in ranking %}
+        <option value="{{ item.user.pk }}">
+          {{ item.user.name }}{% if item.user == request.user %} (나){% endif %}
+        </option>
+        {% endfor %}
+      </select>
+      <input type="date" id="feedback-date" class="form-input form-input--sm">
+      <button class="btn-submit btn-submit--sm" onclick="goToMemberLedger()">
+        <i class="ti ti-eye"></i>
+        확인하기
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function goToMemberLedger() {
+    const userId = document.getElementById('feedback-target').value;
+    const date   = document.getElementById('feedback-date').value;
+
+    if (!userId) { alert('대상 멤버를 선택해 주세요.'); return; }
+    if (!date)   { alert('날짜를 선택해 주세요.'); return; }
+
+    window.location.href = `/groups/{{ group.pk }}/ledger/${userId}/${date}/`;
+  }
+</script>
+</body>
+</html>

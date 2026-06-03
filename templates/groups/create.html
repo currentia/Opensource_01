@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyMate - 새 모임 만들기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'groups/css/create.css' %}">
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header class="header">
+  <a href="{% url 'ledger:main' %}" class="logo">
+    <i class="ti ti-wallet"></i>
+    MoneyMate
+  </a>
+  <nav class="header-nav">
+    <a href="{% url 'groups:group_list' %}" class="nav-btn nav-btn--active">
+      <i class="ti ti-users"></i>
+      모임
+    </a>
+    <a href="{% url 'friends:friend_main' %}" class="nav-btn">
+      <i class="ti ti-user-plus"></i>
+      친구
+    </a>
+    <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="ti ti-logout"></i>
+        로그아웃
+      </button>
+    </form>
+  </nav>
+</header>
+
+<!-- ── 메인 컨테이너 ── -->
+<div class="container container--narrow">
+
+  <!-- 상단 헤더 -->
+  <div class="page-header">
+    <a href="{% url 'groups:group_list' %}" class="btn-back">
+      <i class="ti ti-arrow-left"></i>
+    </a>
+    <h1 class="page-title">새 모임 만들기</h1>
+  </div>
+
+  <!-- 에러 메시지 -->
+  {% if error %}
+  <div class="alert-error">
+    <i class="ti ti-alert-circle"></i>
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <!-- 생성 폼 -->
+  <form method="POST" action="{% url 'groups:group_create' %}">
+    {% csrf_token %}
+
+    <!-- 모임 이름 -->
+    <div class="form-group">
+      <label class="form-label" for="name">
+        <i class="ti ti-users"></i>
+        모임 이름
+      </label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        class="form-input"
+        placeholder="모임 이름을 입력해 주세요"
+        maxlength="50"
+        required
+      >
+    </div>
+
+    <!-- 종료일 -->
+    <div class="form-group">
+      <label class="form-label" for="end_date">
+        <i class="ti ti-calendar-due"></i>
+        종료일
+      </label>
+      <input
+        type="date"
+        id="end_date"
+        name="end_date"
+        class="form-input"
+        required
+      >
+    </div>
+
+    <!-- 기본 챌린지 카테고리 -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="ti ti-target"></i>
+        기본 챌린지 카테고리
+      </label>
+      <div class="category-grid">
+        <label class="category-item">
+          <input type="radio" name="category" value="food" required>
+          <span class="category-btn">
+            <i class="ti ti-tools-kitchen-2"></i>
+            식비
+          </span>
+        </label>
+        <label class="category-item">
+          <input type="radio" name="category" value="transport">
+          <span class="category-btn">
+            <i class="ti ti-bus"></i>
+            교통비
+          </span>
+        </label>
+        <label class="category-item">
+          <input type="radio" name="category" value="leisure">
+          <span class="category-btn">
+            <i class="ti ti-device-gamepad"></i>
+            여가비
+          </span>
+        </label>
+        <label class="category-item">
+          <input type="radio" name="category" value="other">
+          <span class="category-btn">
+            <i class="ti ti-dots"></i>
+            기타
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 비율 기준 -->
+    <div class="form-group">
+      <label class="form-label" for="ratio_limit">
+        <i class="ti ti-percentage"></i>
+        하루 지출 대비 비율 기준
+        <span class="ratio-display" id="ratio-display">30%</span>
+      </label>
+      <input
+        type="range"
+        id="ratio_limit"
+        name="ratio_limit"
+        class="form-range"
+        min="0.05"
+        max="1.0"
+        step="0.05"
+        value="0.3"
+      >
+      <div class="ratio-hint">
+        <span>5%</span>
+        <span class="ratio-desc" id="ratio-desc">하루 지출의 30% 이하면 달성</span>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit">
+      <i class="ti ti-circle-check"></i>
+      모임 만들기
+    </button>
+
+  </form>
+
+</div>
+
+<script>
+  const rangeInput   = document.getElementById('ratio_limit');
+  const ratioDisplay = document.getElementById('ratio-display');
+  const ratioDesc    = document.getElementById('ratio-desc');
+
+  function updateRatio(val) {
+    const pct = Math.round(val * 100);
+    ratioDisplay.textContent = pct + '%';
+    ratioDesc.textContent    = '하루 지출의 ' + pct + '% 이하면 달성';
+  }
+
+  rangeInput.addEventListener('input', (e) => updateRatio(e.target.value));
+  updateRatio(rangeInput.value);
+</script>
+</body>
+</html>
