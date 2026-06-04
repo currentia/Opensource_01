@@ -1,0 +1,466 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --green-600: #0F6E56;
+  --green-500: #1D9E75;
+  --green-50:  #E1F5EE;
+
+  --gray-900:  #2C2C2A;
+  --gray-600:  #5F5E5A;
+  --gray-200:  #B4B2A9;
+  --gray-100:  #D3D1C7;
+  --gray-50:   #F1EFE8;
+
+  --red-400:   #E24B4A;
+  --red-50:    #FCEBEB;
+
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+/* ── 기본 설정 ── */
+body {
+  font-family: 'Gowun Dodum', sans-serif;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+/* ── 헤더 ── */
+.header {
+  background: #fff;
+  border-bottom: 0.5px solid var(--gray-100);
+  padding: 0 1.5rem;
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  text-decoration: none;
+}
+
+.logo i {
+  font-size: 20px;
+  color: var(--green-500);
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn,
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 7px 12px;
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+
+  font-size: 13px;
+  font-family: 'Gowun Dodum', sans-serif;
+  color: var(--gray-600);
+  text-decoration: none;
+
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nav-btn:hover,
+.logout-btn:hover {
+  border-color: var(--green-500);
+  color: var(--green-500);
+}
+
+.nav-btn--active {
+  background: var(--green-50);
+  border-color: var(--green-500);
+  color: var(--green-500);
+  font-weight: 700;
+}
+
+.logout-btn:hover {
+  border-color: var(--red-400);
+  color: var(--red-400);
+}
+
+/* ── 메인 컨테이너 ── */
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.container--narrow {
+  max-width: 430px;
+}
+
+/* ── 페이지 상단 ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.btn-back {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+
+  color: var(--gray-600);
+  text-decoration: none;
+
+  transition: all 0.15s;
+}
+
+.btn-back i {
+  font-size: 18px;
+}
+
+.btn-back:hover {
+  border-color: var(--green-500);
+  color: var(--green-500);
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+/* ── 에러 메시지 ── */
+.alert-error {
+  background: var(--red-50);
+  border: 0.5px solid var(--red-400);
+  border-radius: var(--radius-md);
+
+  padding: 10px 12px;
+  margin-bottom: 1rem;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 13px;
+  color: var(--red-400);
+}
+
+.alert-error i {
+  font-size: 16px;
+}
+
+/* ── 폼 전체 ── */
+form {
+  background: #fff;
+  border: 0.5px solid var(--gray-100);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
+/* 헤더 안 로그아웃 form은 카드 스타일 제거 */
+.header-nav form {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* ── 입력 그룹 ── */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-900);
+
+  margin-bottom: 8px;
+}
+
+.form-label i {
+  font-size: 16px;
+  color: var(--green-500);
+}
+
+.form-input {
+  width: 100%;
+  padding: 11px 12px;
+
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+
+  font-size: 14px;
+  font-family: 'Gowun Dodum', sans-serif;
+  color: var(--gray-900);
+
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-input::placeholder {
+  color: var(--gray-200);
+}
+
+.form-input:focus {
+  border-color: var(--green-500);
+}
+
+/* ── 카테고리 선택 ── */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.category-item {
+  cursor: pointer;
+}
+
+.category-item input {
+  display: none;
+}
+
+.category-btn {
+  width: 100%;
+  padding: 12px 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+
+  font-size: 13px;
+  color: var(--gray-600);
+
+  transition: all 0.15s;
+}
+
+.category-btn i {
+  font-size: 17px;
+  color: var(--gray-200);
+}
+
+.category-item:hover .category-btn {
+  border-color: var(--green-500);
+  color: var(--green-500);
+}
+
+.category-item:hover .category-btn i {
+  color: var(--green-500);
+}
+
+.category-item input:checked + .category-btn {
+  background: var(--green-50);
+  border-color: var(--green-500);
+  color: var(--green-500);
+  font-weight: 700;
+}
+
+.category-item input:checked + .category-btn i {
+  color: var(--green-500);
+}
+
+/* ── 비율 기준 ── */
+.ratio-display {
+  margin-left: auto;
+
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--green-50);
+
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-500);
+}
+
+.form-range {
+  width: 100%;
+  height: 6px;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  background: var(--green-50);
+  border-radius: 999px;
+  outline: none;
+
+  cursor: pointer;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 18px;
+  height: 18px;
+
+  border-radius: 50%;
+  background: var(--green-500);
+  border: 3px solid #fff;
+
+  box-shadow: 0 0 0 0.5px var(--gray-100);
+  cursor: pointer;
+}
+
+.form-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+
+  border-radius: 50%;
+  background: var(--green-500);
+  border: 3px solid #fff;
+
+  box-shadow: 0 0 0 0.5px var(--gray-100);
+  cursor: pointer;
+}
+
+.ratio-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: 8px;
+
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+.ratio-desc {
+  color: var(--green-500);
+  font-weight: 700;
+}
+
+/* ── 제출 버튼 ── */
+.btn-submit {
+  width: 100%;
+  padding: 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background: var(--green-500);
+  color: #fff;
+
+  border: none;
+  border-radius: var(--radius-md);
+
+  font-size: 15px;
+  font-family: 'Gowun Dodum', sans-serif;
+
+  cursor: pointer;
+  transition: background 0.15s;
+
+  margin-top: 0.5rem;
+}
+
+.btn-submit:hover {
+  background: var(--green-600);
+}
+
+.btn-submit i {
+  font-size: 18px;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 520px) {
+  .header {
+    padding: 0 1rem;
+  }
+
+  .header-nav {
+    gap: 5px;
+  }
+
+  .nav-btn,
+  .logout-btn {
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+
+  .nav-btn i,
+  .logout-btn i {
+    font-size: 15px;
+  }
+
+  .container {
+    padding: 1.25rem 1rem;
+  }
+
+  form {
+    padding: 1.25rem;
+  }
+
+  .category-grid {
+    gap: 7px;
+  }
+
+  .category-btn {
+    padding: 11px 8px;
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 390px) {
+  .nav-btn,
+  .logout-btn {
+    padding: 7px 8px;
+  }
+
+  .nav-btn i,
+  .logout-btn i {
+    display: none;
+  }
+
+  .logo {
+    font-size: 17px;
+  }
+
+  .page-title {
+    font-size: 17px;
+  }
+}
