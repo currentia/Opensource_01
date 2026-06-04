@@ -1,0 +1,332 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --green-600: #0F6E56;
+  --green-500: #1D9E75;
+  --green-50:  #E1F5EE;
+
+  --gray-900:  #2C2C2A;
+  --gray-600:  #5F5E5A;
+  --gray-200:  #B4B2A9;
+  --gray-100:  #D3D1C7;
+  --gray-50:   #F1EFE8;
+
+  --red-500:   #C93A38;
+  --red-400:   #E24B4A;
+  --red-50:    #FCEBEB;
+
+  --yellow-50: #FFF7E6;
+  --yellow-400:#F5A623;
+
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+/* ── 기본 설정 ── */
+body {
+  font-family: 'Gowun Dodum', sans-serif;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+/* ── 헤더 ── */
+.header {
+  background: #fff;
+  border-bottom: 0.5px solid var(--gray-100);
+  padding: 0 1.5rem;
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  text-decoration: none;
+}
+
+.logo i {
+  font-size: 20px;
+  color: var(--green-500);
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn,
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 7px 12px;
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+
+  font-size: 13px;
+  font-family: 'Gowun Dodum', sans-serif;
+  color: var(--gray-600);
+  text-decoration: none;
+
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nav-btn:hover,
+.logout-btn:hover {
+  border-color: var(--green-500);
+  color: var(--green-500);
+}
+
+.nav-btn--active {
+  background: var(--green-50);
+  border-color: var(--green-500);
+  color: var(--green-500);
+  font-weight: 700;
+}
+
+.logout-btn:hover {
+  border-color: var(--red-400);
+  color: var(--red-400);
+}
+
+/* ── 메인 컨테이너 ── */
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.container--narrow {
+  max-width: 430px;
+}
+
+/* ── 페이지 상단 ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 1rem;
+}
+
+.btn-back {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+
+  color: var(--gray-600);
+  text-decoration: none;
+
+  transition: all 0.15s;
+}
+
+.btn-back i {
+  font-size: 18px;
+}
+
+.btn-back:hover {
+  border-color: var(--green-500);
+  color: var(--green-500);
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+/* ── 종료 확인 카드 ── */
+.confirm-card {
+  background: #fff;
+  border: 0.5px solid var(--gray-100);
+  border-radius: var(--radius-lg);
+
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.confirm-icon {
+  width: 56px;
+  height: 56px;
+
+  margin: 0 auto 1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: var(--yellow-50);
+
+  font-size: 32px;
+  color: var(--yellow-400);
+}
+
+.confirm-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--gray-900);
+
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.confirm-desc {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.7;
+
+  margin-bottom: 1.5rem;
+}
+
+/* ── 버튼 영역 ── */
+.confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirm-actions form {
+  width: 100%;
+}
+
+.btn-danger {
+  width: 100%;
+  padding: 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  background: var(--red-400);
+  color: #fff;
+
+  border: none;
+  border-radius: var(--radius-md);
+
+  font-size: 15px;
+  font-family: 'Gowun Dodum', sans-serif;
+
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-danger:hover {
+  background: var(--red-500);
+}
+
+.btn-danger i {
+  font-size: 18px;
+}
+
+.btn-cancel {
+  width: 100%;
+  padding: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #fff;
+  color: var(--gray-600);
+
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+
+  font-size: 14px;
+  text-decoration: none;
+
+  transition: all 0.15s;
+}
+
+.btn-cancel:hover {
+  border-color: var(--green-500);
+  color: var(--green-500);
+  background: var(--green-50);
+}
+
+/* ── 반응형 ── */
+@media (max-width: 520px) {
+  .header {
+    padding: 0 1rem;
+  }
+
+  .header-nav {
+    gap: 5px;
+  }
+
+  .nav-btn,
+  .logout-btn {
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+
+  .nav-btn i,
+  .logout-btn i {
+    font-size: 15px;
+  }
+
+  .container {
+    padding: 1.25rem 1rem;
+  }
+
+  .confirm-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .confirm-title {
+    font-size: 16px;
+  }
+
+  .confirm-desc {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 390px) {
+  .nav-btn,
+  .logout-btn {
+    padding: 7px 8px;
+  }
+
+  .nav-btn i,
+  .logout-btn i {
+    display: none;
+  }
+
+  .logo {
+    font-size: 17px;
+  }
+}
