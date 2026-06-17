@@ -33,6 +33,14 @@
   </div>
 </header>
 
+{% if messages %}
+  <script>
+    {% for message in messages %}
+      alert("{{ message }}");
+    {% endfor %}
+  </script>
+{% endif %}
+
 <div class="container">
 
   <!-- ── 1. 친구 검색 및 요청 ── -->

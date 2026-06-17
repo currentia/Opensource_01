@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 from .models import FriendRequest
 from accounts.models import User, UserScore
@@ -65,24 +66,15 @@ def send_request(request):
         username = request.POST.get('username', '').strip()
         me       = request.user
 
-        if username == me.username:  # 자기 자신에게 요청 방지
+        if username == me.username: # 자기 자신에게 친구 요청 방지
+            messages.error(request, '자기 자신에게는 요청을 보낼 수 없습니다.')
             return redirect('friends:friend_main')
 
         try:
             to_user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            # 에러 메시지와 함께 페이지 재렌더링
-            me       = request.user
-            my_score = get_score(me)
-            context  = {
-                'error':              '존재하지 않는 아이디입니다.',
-                'friends_with_score': [],
-                'ranking':            [{'user': me, 'score': my_score}],
-                'pending_requests':   FriendRequest.objects.filter(to_user=me, status='pending'),
-                'sent_pending':       [],
-                'my_score':           my_score,
-            }
-            return render(request, 'friends/friend.html', context)
+        except User.DoesNotExist: # 아이디 존재 x
+            messages.error(request, '존재하지 않는 아이디입니다.')
+            return redirect('friends:friend_main')
 
         already = FriendRequest.objects.filter(
             from_user=me, to_user=to_user
@@ -90,15 +82,17 @@ def send_request(request):
             from_user=to_user, to_user=me
         ).exists()
 
-        if not already:
+        if already:
+            messages.warning(request, '친구 요청을 보낸 상태이거나 현재 친구인 상태입니다.')
+        else:
             FriendRequest.objects.create(from_user=me, to_user=to_user)
-    
+            messages.success(request, f'{to_user.name}님에게 친구 요청을 보냈습니다.')
+
     # 1. 자기 자신에게 요청? ──> redirect 
     # 2. 존재하지 않는 유저? ──> 에러 메시지 렌더링
     # 3. 이미 요청 존재?     ──> 무시 (중복 방지)
 
     return redirect('friends:friend_main')
-
 
 @login_required(login_url='accounts:login')
 def accept_request(request, request_id):
