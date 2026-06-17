@@ -132,11 +132,15 @@
 
     <!-- 커스텀 챌린지 -->
     {% for challenge in custom_challenges %}
-    <div class="challenge-card challenge-card--custom">
+    <div class="challenge-card challenge-card--custom {% if challenge.expires_date < today %}challenge-card--expired{% endif %}">
       <span class="challenge-type">커스텀</span>
+      {% if challenge.expires_date < today %}
+      <span class="challenge-expired-badge">만료</span>
+      {% endif %}
       <span class="challenge-desc">
         하루 {{ challenge.get_category_display }}
         <strong>{{ challenge.amount_limit|floatformat:0 }}원</strong> 이하면 달성
+        <span class="challenge-bonus">+{{ challenge.bonus_score }}점</span>
         {% if challenge.description %}
         <span class="challenge-note">— {{ challenge.description }}</span>
         {% endif %}
@@ -161,14 +165,18 @@
       </summary>
       <form method="POST" action="{% url 'groups:custom_challenge_create' group.pk %}" class="challenge-form">
         {% csrf_token %}
-        <select name="category" class="form-input form-input--sm" required>
-          <option value="">카테고리 선택</option>
-          <option value="food">식비</option>
-          <option value="transport">교통비</option>
-          <option value="leisure">여가비</option>
-          <option value="other">기타</option>
-        </select>
+        <p class="challenge-form__category-fixed">
+          카테고리: <strong>{{ challenges.0.get_category_display }}</strong> (기본 챌린지 고정)
+        </p>
         <input type="number" name="amount_limit" class="form-input form-input--sm" placeholder="하루 한도 금액 (원)" min="1" required>
+        <select name="bonus_score" class="form-input form-input--sm" required>
+          <option value="">달성 시 보너스 점수 선택</option>
+          <option value="1">+1점</option>
+          <option value="2">+2점</option>
+          <option value="3">+3점</option>
+          <option value="4">+4점</option>
+          <option value="5">+5점</option>
+        </select>
         <input type="text" name="description" class="form-input form-input--sm" placeholder="설명 (선택)" maxlength="100">
         <button type="submit" class="btn-submit btn-submit--sm">추가</button>
       </form>
