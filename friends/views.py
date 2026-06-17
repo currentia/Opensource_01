@@ -1,15 +1,25 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from datetime import date
 
 from .models import FriendRequest
-from accounts.models import User, UserScore
+from accounts.models import User, UserScore, DailyAchievement
 
 
 def get_score(user):
     """유저의 점수를 안전하게 조회 (없으면 60점 반환)"""
     score_obj, created = UserScore.objects.get_or_create(user=user, defaults={'score': 60})
     return score_obj.score
+
+
+def get_today_achieved(user):
+    """오늘 달성 여부 반환 (기록 없으면 None)"""
+    try:
+        record = DailyAchievement.objects.get(user=user, date=date.today())
+        return record.achieved
+    except DailyAchievement.DoesNotExist:
+        return None
 
 
 @login_required(login_url='accounts:login')
@@ -26,9 +36,13 @@ def friend_main(request):
     for req in received_accepted:
         friends.append(req.from_user)
 
-    # 친구 목록에 점수 추가
+    # 친구 목록에 점수 + 오늘 달성 여부 추가
     friends_with_score = [
-        {'user': friend, 'score': get_score(friend)}
+        {
+            'user':     friend,
+            'score':    get_score(friend),
+            'achieved': get_today_achieved(friend),
+        }
         for friend in friends
     ]
 

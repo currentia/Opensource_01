@@ -153,9 +153,13 @@
               {{ item.user.name }} ({{ item.user.username }})
             </p>
           </div>
-          <div class="status-dot
-            {% if item.score >= 60 %}achieved{% else %}not-achieved{% endif %}">
-          </div>
+          {% if item.achieved is None %}
+            <span class="status-icon status-icon--none"><i class="ti ti-clock"></i>기록 없음</span>
+          {% elif item.achieved %}
+            <span class="status-icon status-icon--achieved"><i class="ti ti-circle-check"></i>달성</span>
+          {% else %}
+            <span class="status-icon status-icon--failed"><i class="ti ti-circle-x"></i>미달성</span>
+          {% endif %}
         </div>
       {% endfor %}
     {% else %}
