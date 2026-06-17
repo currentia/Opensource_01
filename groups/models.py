@@ -2,12 +2,12 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from ledger.models import Ledger
-from django.utils import timezone
  
 User = settings.AUTH_USER_MODEL
  
 # ledger.models 의 CATEGORY_CHOICES 와 동기화
 CATEGORY_CHOICES = Ledger.CATEGORY_CHOICES
+ 
  
 # ──────────────────────────────────────────────
 # 1. 모임 기본 정보
@@ -36,7 +36,7 @@ class Group(models.Model):
 class GroupMember(models.Model):
     group       = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='members')
     user        = models.ForeignKey(User,  on_delete=models.CASCADE, related_name='group_memberships')
-    group_score = models.IntegerField(default=0)    # 모임 점수: 0점 시작, 개인 점수와 완전 분리
+    group_score = models.FloatField(default=0.0)    # 모임 점수: 0점 시작, 개인 점수와 완전 분리
     joined_at   = models.DateTimeField(auto_now_add=True)
  
     class Meta:
@@ -99,7 +99,7 @@ class CustomChallenge(models.Model):
                     default=1,
                     validators=[MinValueValidator(1), MaxValueValidator(5)]
                   )                                 # 달성 시 모임 점수 보너스 (1~5점)
-    expires_date = models.DateField(default=timezone.now)              # 유효 기간: 등록 당일 23:59까지
+    expires_date = models.DateField()               # 유효 기간: 등록 당일 23:59까지
     description  = models.CharField(max_length=100, blank=True)
     created_at   = models.DateTimeField(auto_now_add=True)
  
@@ -171,7 +171,7 @@ class GroupScoreHistory(models.Model):
     ]
  
     group_member = models.ForeignKey(GroupMember, on_delete=models.CASCADE, related_name='score_history')
-    score_delta  = models.IntegerField()            # +점수 or -점수
+    score_delta  = models.FloatField()              # +점수 or -점수
     reason       = models.CharField(max_length=20, choices=REASON_CHOICES)
     created_at   = models.DateTimeField(auto_now_add=True)
  

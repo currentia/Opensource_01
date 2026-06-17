@@ -106,7 +106,7 @@
           <span class="badge-me">나</span>
           {% endif %}
         </span>
-        <span class="rank-score">{{ item.score }}점</span>
+        <span class="rank-score">{{ item.score|floatformat:0}}점</span>
       </div>
       {% endfor %}
     </div>

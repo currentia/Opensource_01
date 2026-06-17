@@ -170,39 +170,132 @@ def record_group_achievement(user, target_date):
 
 # ──────────────────────────────────────────────
 # 4. 모임 점수 업데이트
-# accounts/services.py 의 check_and_update_score 와 동일한 구조
-# 10일 연속 달성 → +1점 / 10일 연속 미달성 → -1점
 # ──────────────────────────────────────────────
 
-def check_and_update_group_score(user, group):
+def _calc_base_score(ratio):
     """
-    최근 10일 연속 달성/미달성 여부를 확인하고 모임 점수를 업데이트
+    기본 챌린지 사용 비율 → 기본 점수 반환
+    ratio: 하루 해당 카테고리 지출 / 하루 전체 지출
+    """
+    if ratio == 0:
+        return 3, True          # 0% 사용 → +3점, 보너스 제한 플래그
+    elif ratio <= 0.30:
+        return 3, False         # 1~30% 사용 → +3점
+    elif ratio <= 0.50:
+        return 4, False         # 30~50% 사용 → +4점
+    elif ratio <= 0.80:
+        return 5, False         # 50~80% 사용 → +5점 (최고 구간)
+    elif ratio <= 1.00:
+        return 3, False         # 80~100% 사용 → +3점
+    elif ratio <= 1.20:
+        return -3, False        # 100~120% 사용 → -3점
+    else:
+        return -5, False        # 120% 초과 → -5점
+
+
+def _calc_streak_bonus(member, today):
+    """
+    연속 달성/미달성 일수를 계산해 보너스/패널티 반환
+    달성: 3일 → +1점 / 5일 → +2점
+    미달성: 3일 → -3점 / 5일 → -5점
+    """
+    achieved_streak = 0
+    failed_streak = 0
+
+    for i in range(5):
+        d = today - timedelta(days=i)
+        try:
+            record = GroupDailyAchievement.objects.get(group_member=member, date=d)
+            if i == 0:
+                if record.is_achieved:
+                    achieved_streak += 1
+                else:
+                    failed_streak += 1
+            else:
+                if record.is_achieved and achieved_streak > 0:
+                    achieved_streak += 1
+                elif not record.is_achieved and failed_streak > 0:
+                    failed_streak += 1
+                else:
+                    break
+        except GroupDailyAchievement.DoesNotExist:
+            break
+
+    bonus = 0
+    if achieved_streak >= 5:
+        bonus = +2
+    elif achieved_streak >= 3:
+        bonus = +1
+    elif failed_streak >= 5:
+        bonus = -5
+    elif failed_streak >= 3:
+        bonus = -3
+
+    return bonus
+
+
+def check_and_update_group_score(user, group, target_date):
+    """
+    하루 지출 저장 시 호출 — 모임 점수 업데이트
+    1. 기본 챌린지 사용 비율 → 기본 점수 산출
+    2. 연속 달성/미달성 보너스/패널티 합산
+    3. 하루 최대 +10점 캡 적용 (음수는 캡 없음)
+    4. 0% 달성 시 보너스 점수 제한 (기본 점수만)
+    5. 감쇠 공식 적용: raw × (100 - 현재점수) / 30
+    6. 0~100 클램핑
     """
     member = _get_member(group, user)
     if not member:
         return
 
-    today = date.today()
-    dates = [today - timedelta(days=i) for i in range(10)]
-
-    records = GroupDailyAchievement.objects.filter(
-        group_member=member,
-        date__in=dates,
-    ).values_list('date', 'is_achieved')
-
-    record_dict = {r[0]: r[1] for r in records}
-
-    # 10일치 데이터가 없으면 점수 변동 없음
-    if len(record_dict) < 10:
+    # 기본 챌린지 카테고리 및 ratio 계산
+    base_challenge = group.challenges.first()
+    if not base_challenge:
         return
 
-    # 10일 연속 달성
-    if all(record_dict.get(d) == True for d in dates):
-        _apply_score(member, +1, 'daily_achieve')
+    total_spent = Ledger.objects.filter(
+        user=user,
+        date=target_date,
+    ).aggregate(total=Sum('amount'))['total'] or 0
 
-    # 10일 연속 미달성
-    elif all(record_dict.get(d) == False for d in dates):
-        _apply_score(member, -1, 'daily_penalty')
+    if total_spent == 0:
+        ratio = 0.0
+    else:
+        category_spent = Ledger.objects.filter(
+            user=user,
+            date=target_date,
+            category=base_challenge.category,
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        ratio = category_spent / total_spent
+
+    base_score, bonus_restricted = _calc_base_score(ratio)
+
+    # 연속 달성/미달성 보너스
+    streak_bonus = 0 if bonus_restricted else _calc_streak_bonus(member, target_date)
+
+    raw_score = base_score + streak_bonus
+
+    # 하루 최대 +10점 캡 (음수는 제한 없음)
+    if raw_score > 10:
+        raw_score = 10
+
+    # 감쇠 공식 적용 (양수일 때만)
+    current_score = member.group_score
+    if raw_score > 0:
+        actual_delta = raw_score * (100 - current_score) / 30
+    else:
+        actual_delta = float(raw_score)
+
+    # 0~100 클램핑
+    new_score = current_score + actual_delta
+    new_score = max(0.0, min(100.0, new_score))
+    actual_delta = new_score - current_score
+
+    if actual_delta == 0:
+        return
+
+    reason = 'daily_achieve' if actual_delta > 0 else 'daily_penalty'
+    _apply_score(member, actual_delta, reason)
 
 
 # ──────────────────────────────────────────────
@@ -266,7 +359,7 @@ def record_group_daily(user, target_date):
     # 유저가 속한 모든 모임에 대해 점수 체크
     memberships = GroupMember.objects.filter(user=user).select_related('group')
     for member in memberships:
-        check_and_update_group_score(user, member.group)
+        check_and_update_group_score(user, member.group, target_date)
 
 
 # ──────────────────────────────────────────────
