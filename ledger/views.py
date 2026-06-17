@@ -1,7 +1,7 @@
 import json
 from datetime import date
 
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 
@@ -16,37 +16,34 @@ def first(request):
 
 @login_required(login_url='accounts:login')
 def main(request):
-    user  = request.user
+    user = request.user
     today = date.today()
 
-    # 이번 달 지출 합계
-    total_spent = Ledger.objects.filter( # filter() -> 인번 연도, 이번 달 데이터만 필터링
+    total_spent = Ledger.objects.filter(
         user=user,
         date__year=today.year,
         date__month=today.month
-    ).aggregate(total=Sum('amount'))['total'] or 0 # 필터된 행의 amount를 합산, 이후 ['total']로 aggregate 결과 딕셔너리에서 값 추출
-                                                   # 데이터가 없으면 None이 반환되므로 0으로 대체
+    ).aggregate(total=Sum('amount'))['total'] or 0
 
-    # 현재 점수
-    score_obj, _ = UserScore.objects.get_or_create( # get_or_create() 는 조회 + 없으면 생성
-        user=user, defaults={'score': 60}
+    score_obj, _ = UserScore.objects.get_or_create(
+        user=user,
+        defaults={'score': 60}
     )
     score = score_obj.score
 
-    # 지출 내역이 있는 날짜 목록 (캘린더 점 표시용)
     spending_dates = {
-        str(d): True # date 객체를 문자열로 변환해서 딕셔너리 생성
+        str(d): True
         for d in Ledger.objects.filter(
             user=user,
             date__year=today.year,
             date__month=today.month
-        ).values_list('date', flat=True).distinct() # distinct() 중복 날짜 제거
+        ).values_list('date', flat=True).distinct()
     }
 
     context = {
-        'user':                user,
-        'total_spent':         total_spent,
-        'score':               score,
+        'user': user,
+        'total_spent': total_spent,
+        'score': score,
         'spending_dates_json': json.dumps(spending_dates, default=str),
     }
 
@@ -55,60 +52,100 @@ def main(request):
 
 @login_required(login_url='accounts:login')
 def detail(request, year, month, day):
-    user        = request.user
-    spent_date  = date(year, month, day) # /ledger/2026/5/26/ 형태라면 year=2026, month=5, day=26이 자동으로 들어옴
+    user = request.user
+    spent_date = date(year, month, day)
 
     if request.method == 'POST':
-        # 기존 해당 날짜 지출 전체 삭제 후 재저장
-        Ledger.objects.filter(user=user, date=spent_date).delete()
+        category = request.POST.get('category')
+        amount = request.POST.get('amount')
+        memo = request.POST.get('memo')
 
-        categories = request.POST.getlist('category') # 복수 데이터 수집
-        amounts    = request.POST.getlist('amount')
-        memos      = request.POST.getlist('memo')
+        if amount and int(amount) > 0:
+            Ledger.objects.create(
+                user=user,
+                date=spent_date,
+                category=category,
+                amount=int(amount),
+                memo=memo,
+            )
 
-        for category, amount, memo in zip(categories, amounts, memos): # 순서대로 묶기
-            if amount and int(amount) > 0:
-                Ledger.objects.create( # 유효한 것만 저장
-                    user     = user,
-                    date     = spent_date,
-                    category = category,
-                    amount   = int(amount),
-                    memo     = memo,
-                )
-
-        # 총 지출 계산 후 달성 여부 기록 및 점수 업데이트
         total_spent = Ledger.objects.filter(
-            user=user, date=spent_date
+            user=user,
+            date=spent_date
         ).aggregate(total=Sum('amount'))['total'] or 0
 
-        record_achievement(user, spent_date, total_spent) # 저장 후 총 지출을 계산하여 record_achievement 서비스 함수로 넘김
+        record_achievement(user, spent_date, total_spent)
 
         return redirect('ledger:detail', year=year, month=month, day=day)
 
-    # GET: 해당 날짜 지출 내역 조회
     ledgers = Ledger.objects.filter(user=user, date=spent_date)
 
     total_spent = ledgers.aggregate(
         total=Sum('amount')
     )['total'] or 0
 
-    # 카테고리별 합계
     category_totals = {}
-    for choice in Ledger.CATEGORY_CHOICES: # CATEGORY_CHOICES는 Ledger 모델에 정의된 카테고리 목록
-        key   = choice[0]
+    for choice in Ledger.CATEGORY_CHOICES:
+        key = choice[0]
         label = choice[1]
         total = ledgers.filter(category=key).aggregate(
             total=Sum('amount')
         )['total'] or 0
         category_totals[key] = {'label': label, 'total': total}
 
+    if user.daily_budget > 0:
+        ratio_value = total_spent / user.daily_budget
+    else:
+        ratio_value = 0
+
+    ratio = round(ratio_value * 100, 1)
+
+    top_category = None
+    top_amount = 0
+
+    for item in category_totals.values():
+        if item['total'] > top_amount:
+            top_amount = item['total']
+            top_category = item['label']
+
+    if ratio_value < 0.5:
+        danger = "보통"
+        warning = "현재 지출이 안정적입니다. 지금처럼 소비를 유지해도 좋습니다."
+    elif ratio_value < 0.7:
+        danger = "주의"
+        warning = "목표 금액의 50%를 넘었습니다. 남은 소비를 조절해보세요."
+    else:
+        danger = "위험"
+        warning = "목표 금액의 70% 이상을 사용했습니다. 오늘은 꼭 필요한 소비만 하는 것이 좋습니다."
+
+    if top_category == "카페/간식":
+        category_tip = "☕ 카페 지출이 많습니다. 텀블러 할인이나 집커피를 활용해보세요."
+    elif top_category == "쇼핑":
+        category_tip = "🛍️ 쇼핑 지출이 많습니다. 필요한 물건인지 한 번 더 확인해보세요."
+    elif top_category == "구독":
+        category_tip = "📺 사용하지 않는 구독 서비스가 있는지 확인해보세요."
+    elif top_category == "문화생활":
+        category_tip = "🎬 문화생활 지출이 높습니다. 이번 주 예산을 확인해보세요."
+    elif top_category == "식비":
+        category_tip = "🍔 식비 지출이 가장 높습니다. 배달 횟수를 줄여보는 건 어떨까요?"
+    elif top_category == "교통비":
+        category_tip = "🚌 교통비 지출이 많습니다. 도보나 대중교통 환승을 활용해보세요."
+    elif top_category == "여가비":
+        category_tip = "🎮 여가비 지출이 많습니다. 남은 예산을 확인해보세요."
+    else:
+        category_tip = "💰 현재 가장 높은 소비 항목을 확인해보세요."
+
     context = {
-        'user':             user,
-        'spent_date':       spent_date,
-        'ledgers':          ledgers,
-        'total_spent':      total_spent,
-        'category_totals':  category_totals,
-        'daily_budget':     user.daily_budget,
+        'user': user,
+        'spent_date': spent_date,
+        'ledgers': ledgers,
+        'total_spent': total_spent,
+        'category_totals': category_totals,
+        'daily_budget': user.daily_budget,
+        'ratio': ratio,
+        'danger': danger,
+        'warning': warning,
+        'category_tip': category_tip,
     }
 
     return render(request, 'ledger/detail.html', context)
