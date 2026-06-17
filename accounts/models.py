@@ -10,7 +10,7 @@ class User(AbstractUser): #AbstractUser에 아이디, 패스워드가 들어가 
     
 class UserScore(models.Model): # 1:1 관계
     user    = models.OneToOneField(User, on_delete=models.CASCADE) # OneToOneField -> user가 삭제되면 userscore도 삭제
-    score   = models.IntegerField(default=60)   # 기본 60점 시작 (수정 필요)
+    score   = models.FloatField(default=60)  # IntegerField → FloatField 기본 60점 시작
     updated = models.DateTimeField(auto_now=True) # 레코드가 저장될 때마다 자동으로 현재 시간을 기록
 
     def __str__(self):
@@ -21,6 +21,7 @@ class DailyAchievement(models.Model): # 1:N 관계
     user     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements') # ForeignKey -> User 1명 : DailyAchievement N개
     date     = models.DateField()
     achieved = models.BooleanField()  # True: 달성 / False: 미달성
+    daily_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     class Meta:
         unique_together = ('user', 'date')  # 하루에 한 번만 기록, unique_together → (user, date) 조합이 유일해야 함
