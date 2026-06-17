@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils import timezone
 
 from friends.models import FriendRequest
+from ledger.models import Ledger
 from .models import (
     Group,
     GroupMember,
@@ -12,6 +13,7 @@ from .models import (
     Challenge,
     CustomChallenge,
     Feedback,
+    CATEGORY_CHOICES,
 )
 from .services import (
     get_group_ranking,
@@ -59,7 +61,7 @@ def group_list(request):
     ).select_related('group', 'from_user')
 
     return render(request, 'groups/list.html', {
-        'my_groups':      my_groups,
+        'my_groups':       my_groups,
         'pending_invites': pending_invites,
     })
 
@@ -87,7 +89,8 @@ def group_create(request):
         # 유효성 검사
         if not all([name, end_date, category, ratio_limit]):
             return render(request, 'groups/create.html', {
-                'error': '모든 항목을 입력해 주세요.',
+                'error':            '모든 항목을 입력해 주세요.',
+                'category_choices': CATEGORY_CHOICES,
             })
 
         try:
@@ -96,7 +99,8 @@ def group_create(request):
                 raise ValueError
         except ValueError:
             return render(request, 'groups/create.html', {
-                'error': '비율은 0 초과 1 이하의 숫자로 입력해 주세요.',
+                'error':            '비율은 0 초과 1 이하의 숫자로 입력해 주세요.',
+                'category_choices': CATEGORY_CHOICES,
             })
 
         # 모임 생성
@@ -118,7 +122,9 @@ def group_create(request):
 
         return redirect('groups:group_detail', group_id=group.pk)
 
-    return render(request, 'groups/create.html')
+    return render(request, 'groups/create.html', {
+        'category_choices': CATEGORY_CHOICES,
+    })
 
 
 # ──────────────────────────────────────────────
@@ -149,6 +155,22 @@ def group_detail(request, group_id):
     custom_challenges = group.custom_challenges.all()
     is_owner          = (group.owner == request.user)
 
+    # 초대 가능한 친구 목록 (모임장만 사용)
+    if is_owner:
+        from friends.models import FriendRequest
+        accepted = FriendRequest.objects.filter(
+            Q(from_user=request.user) | Q(to_user=request.user),
+            status='accepted',
+        ).select_related('from_user', 'to_user')
+
+        friends = []
+        for req in accepted:
+            friend = req.to_user if req.from_user == request.user else req.from_user
+            if not _is_member(group, friend):
+                friends.append(friend)
+    else:
+        friends = []
+
     return render(request, 'groups/detail.html', {
         'group':             group,
         'd_day':             d_day,
@@ -157,6 +179,8 @@ def group_detail(request, group_id):
         'challenges':        challenges,
         'custom_challenges': custom_challenges,
         'is_owner':          is_owner,
+        'invitable_friends': friends,
+        'category_choices':  CATEGORY_CHOICES,
     })
 
 
@@ -183,16 +207,12 @@ def group_invite(request, group_id):
 
         # 친구 여부 검증
         if not _is_friend(request.user, to_user):
-            return render(request, 'groups/detail.html', {
-                'error': '친구만 초대할 수 있습니다.',
-            })
+            return redirect('groups:group_detail', group_id=group_id)
 
         # 최대 인원 검증
         current_count = GroupMember.objects.filter(group=group).count()
         if current_count >= group.max_members:
-            return render(request, 'groups/detail.html', {
-                'error': f'최대 인원({group.max_members}명)에 도달했습니다.',
-            })
+            return redirect('groups:group_detail', group_id=group_id)
 
         # 이미 멤버인지 확인
         if _is_member(group, to_user):
@@ -285,129 +305,6 @@ def custom_challenge_create(request, group_id):
 
 
 # ──────────────────────────────────────────────
-# 7. 피드백 작성
-# ──────────────────────────────────────────────
-
-@login_required
-def feedback_create(request, group_id):
-    """
-    member_ledger 페이지에서 댓글 저장
-    - 자기 자신의 지출 게시글에도 작성 가능
-    - target_user  : 지출 게시글의 주인 (댓글 대상)
-    - ledger_date  : 게시글 날짜
-    POST 파라미터:
-        - target_user_id : 지출 게시글 주인 pk
-        - ledger_date    : 게시글 날짜
-        - content        : 댓글 내용
-    """
-    group = get_object_or_404(Group, pk=group_id)
-
-    if not _is_member(group, request.user):
-        return redirect('groups:group_list')
-
-    if request.method == 'POST':
-        target_user_id = request.POST.get('target_user_id')
-        ledger_date    = request.POST.get('ledger_date')
-        content        = request.POST.get('content', '').strip()
-
-        target_user = get_object_or_404(User, pk=target_user_id)
-
-        # 대상이 같은 모임 멤버인지 확인
-        if not _is_member(group, target_user):
-            return redirect('groups:group_detail', group_id=group_id)
-
-        if content:
-            Feedback.objects.create(
-                group=group,
-                from_user=request.user,
-                target_user=target_user,
-                ledger_date=ledger_date,
-                content=content,
-            )
-            # 댓글 작성 후 해당 지출 게시글로 복귀
-            return redirect(
-                'groups:member_ledger',
-                group_id=group_id,
-                user_id=target_user.pk,
-                ledger_date=ledger_date,
-            )
-
-    return redirect('groups:group_detail', group_id=group_id)
-
-
-# ──────────────────────────────────────────────
-# 7-1. 멤버 하루 지출 조회 + 피드백 작성
-# ──────────────────────────────────────────────
-
-@login_required
-def member_ledger(request, group_id, user_id, ledger_date):
-    """
-    특정 멤버의 하루 지출 게시글
-    - 카테고리별 합산 표시
-    - 모임 멤버 누구나 댓글(피드백) 열람/작성 가능
-    - 본인도 자기 지출 게시글에 접근 가능
-    URL 파라미터:
-        - group_id    : 모임 pk
-        - user_id     : 지출 게시글 주인 pk
-        - ledger_date : 날짜 (YYYY-MM-DD)
-    """
-    from ledger.models import Ledger
-    from django.db.models import Sum
-
-    group       = get_object_or_404(Group, pk=group_id)
-    target_user = get_object_or_404(User, pk=user_id)
-
-    # 접근자가 모임 멤버인지 확인
-    if not _is_member(group, request.user):
-        return redirect('groups:group_list')
-
-    # 게시글 주인도 멤버인지 확인
-    if not _is_member(group, target_user):
-        return redirect('groups:group_detail', group_id=group_id)
-
-    # 카테고리별 합산
-    CATEGORY_LABELS = {
-        'food':      '식비',
-        'transport': '교통비',
-        'leisure':   '여가비',
-        'other':     '기타',
-    }
-
-    raw = Ledger.objects.filter(
-        user=target_user,
-        date=ledger_date,
-    ).values('category').annotate(total=Sum('amount'))
-
-    category_summary = [
-        {
-            'category': row['category'],
-            'label':    CATEGORY_LABELS.get(row['category'], row['category']),
-            'total':    row['total'],
-        }
-        for row in raw
-    ]
-
-    total_spent = sum(row['total'] for row in category_summary)
-
-    # 해당 게시글(target_user + ledger_date)의 모든 댓글
-    feedbacks = Feedback.objects.filter(
-        group=group,
-        target_user=target_user,
-        ledger_date=ledger_date,
-    ).select_related('from_user').order_by('created_at')
-
-    return render(request, 'groups/member_ledger.html', {
-        'group':            group,
-        'target_user':      target_user,
-        'ledger_date':      ledger_date,
-        'category_summary': category_summary,
-        'total_spent':      total_spent,
-        'feedbacks':        feedbacks,
-        'is_own':           target_user == request.user,
-    })
-
-
-# ──────────────────────────────────────────────
 # 6-1. 커스텀 챌린지 삭제 (모임장 전용)
 # ──────────────────────────────────────────────
 
@@ -429,6 +326,108 @@ def custom_challenge_delete(request, group_id, challenge_id):
 
 
 # ──────────────────────────────────────────────
+# 7. 피드백 작성
+# ──────────────────────────────────────────────
+
+@login_required
+def feedback_create(request, group_id):
+    """
+    member_ledger 페이지에서 댓글 저장
+    POST 파라미터:
+        - target_user_id : 지출 게시글 주인 pk
+        - ledger_date    : 게시글 날짜
+        - content        : 댓글 내용
+    """
+    group = get_object_or_404(Group, pk=group_id)
+
+    if not _is_member(group, request.user):
+        return redirect('groups:group_list')
+
+    if request.method == 'POST':
+        target_user_id = request.POST.get('target_user_id')
+        ledger_date    = request.POST.get('ledger_date')
+        content        = request.POST.get('content', '').strip()
+
+        target_user = get_object_or_404(User, pk=target_user_id)
+
+        if not _is_member(group, target_user):
+            return redirect('groups:group_detail', group_id=group_id)
+
+        if content:
+            Feedback.objects.create(
+                group=group,
+                from_user=request.user,
+                target_user=target_user,
+                ledger_date=ledger_date,
+                content=content,
+            )
+            return redirect(
+                'groups:member_ledger',
+                group_id=group_id,
+                user_id=target_user.pk,
+                ledger_date=ledger_date,
+            )
+
+    return redirect('groups:group_detail', group_id=group_id)
+
+
+# ──────────────────────────────────────────────
+# 7-1. 멤버 하루 지출 조회 + 피드백 작성
+# ──────────────────────────────────────────────
+
+@login_required
+def member_ledger(request, group_id, user_id, ledger_date):
+    """
+    특정 멤버의 하루 지출 게시글
+    - 카테고리별 합산 표시
+    - 모임 멤버 누구나 댓글(피드백) 열람/작성 가능
+    """
+    group       = get_object_or_404(Group, pk=group_id)
+    target_user = get_object_or_404(User, pk=user_id)
+
+    if not _is_member(group, request.user):
+        return redirect('groups:group_list')
+
+    if not _is_member(group, target_user):
+        return redirect('groups:group_detail', group_id=group_id)
+
+    # CATEGORY_CHOICES에서 자동 생성 → 카테고리 추가 시 자동 반영
+    CATEGORY_LABELS = dict(CATEGORY_CHOICES)
+
+    raw = Ledger.objects.filter(
+        user=target_user,
+        date=ledger_date,
+    ).values('category').annotate(total=Sum('amount'))
+
+    category_summary = [
+        {
+            'category': row['category'],
+            'label':    CATEGORY_LABELS.get(row['category'], row['category']),
+            'total':    row['total'],
+        }
+        for row in raw
+    ]
+
+    total_spent = sum(row['total'] for row in category_summary)
+
+    feedbacks = Feedback.objects.filter(
+        group=group,
+        target_user=target_user,
+        ledger_date=ledger_date,
+    ).select_related('from_user').order_by('created_at')
+
+    return render(request, 'groups/member_ledger.html', {
+        'group':            group,
+        'target_user':      target_user,
+        'ledger_date':      ledger_date,
+        'category_summary': category_summary,
+        'total_spent':      total_spent,
+        'feedbacks':        feedbacks,
+        'is_own':           target_user == request.user,
+    })
+
+
+# ──────────────────────────────────────────────
 # 8. 모임 종료 (모임장 전용)
 # ──────────────────────────────────────────────
 
@@ -437,7 +436,6 @@ def group_close(request, group_id):
     """
     모임 종료 시 챌린지 보너스/패널티 점수 최종 반영
     - 모임장만 수동 종료 가능
-    - 추후 end_date 기준 자동 종료로 확장 예정
     """
     group = get_object_or_404(Group, pk=group_id)
 
@@ -449,7 +447,6 @@ def group_close(request, group_id):
         for member in members:
             apply_challenge_score(member.user, group)
 
-        # 모임 삭제 (관련 데이터는 CASCADE 로 자동 삭제)
         group.delete()
         return redirect('groups:group_list')
 

@@ -8,7 +8,7 @@ from django.db.models import Sum
 from accounts.models import UserScore
 from accounts.services import record_achievement
 from .models import Ledger
-
+from groups.services import record_group_daily 
 
 def first(request):
     return render(request, 'ledger/first.html')
@@ -75,6 +75,7 @@ def detail(request, year, month, day):
         ).aggregate(total=Sum('amount'))['total'] or 0
 
         record_achievement(user, spent_date, total_spent)
+        record_group_daily(user, spent_date)
 
         return redirect('ledger:detail', year=year, month=month, day=day)
 
