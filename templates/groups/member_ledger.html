@@ -66,6 +66,10 @@
           {% if item.category == 'food' %}<i class="ti ti-tools-kitchen-2"></i>
           {% elif item.category == 'transport' %}<i class="ti ti-bus"></i>
           {% elif item.category == 'leisure' %}<i class="ti ti-device-gamepad"></i>
+          {% elif item.category == 'cafe' %}<i class="ti ti-coffee"></i>
+          {% elif item.category == 'shopping' %}<i class="ti ti-shopping-bag"></i>
+          {% elif item.category == 'culture' %}<i class="ti ti-movie"></i>
+          {% elif item.category == 'subscription' %}<i class="ti ti-refresh"></i>
           {% else %}<i class="ti ti-dots"></i>
           {% endif %}
           {{ item.label }}
