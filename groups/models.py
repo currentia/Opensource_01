@@ -1,16 +1,12 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
+from ledger.models import Ledger
  
 User = settings.AUTH_USER_MODEL
  
 # ledger.models 의 CATEGORY_CHOICES 와 동기화
-CATEGORY_CHOICES = [
-    ('food',      '식비'),
-    ('transport', '교통비'),
-    ('leisure',   '여가비'),
-    ('other',     '기타'),
-]
+CATEGORY_CHOICES = Ledger.CATEGORY_CHOICES
  
  
 # ──────────────────────────────────────────────

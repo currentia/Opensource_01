@@ -2,96 +2,189 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>지출 상세</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ spent_date }} 지출 상세 — MoneyMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="{% static 'ledger/css/detail.css' %}">
 </head>
 <body>
 
-<h1>{{ spent_date }} 지출 상세</h1>
+<!-- ── 헤더 ── -->
+<header class="header">
+  <a href="{% url 'ledger:main' %}" class="logo">
+    <i class="ti ti-wallet"></i>
+    MoneyMate
+  </a>
+  <nav class="header-nav">
+    <a href="{% url 'groups:group_list' %}" class="nav-btn">
+      <i class="ti ti-users"></i>
+      모임
+    </a>
+    <a href="{% url 'friends:friend_main' %}" class="nav-btn">
+      <i class="ti ti-user-plus"></i>
+      친구
+    </a>
+    <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="ti ti-logout"></i>
+        로그아웃
+      </button>
+    </form>
+  </nav>
+</header>
 
-<h3>오늘 목표 금액</h3>
-<p>{{ daily_budget }}원</p>
+<!-- ── 메인 컨테이너 ── -->
+<div class="container">
 
-<h3>오늘 총 지출</h3>
-<p>{{ total_spent }}원</p>
-<hr>
+  <!-- 페이지 상단 -->
+  <div class="page-header">
+    <a href="{% url 'ledger:main' %}" class="btn-back">
+      <i class="ti ti-arrow-left"></i>
+    </a>
+    <h1 class="page-title">{{ spent_date }} 지출 상세</h1>
+  </div>
 
-<h3>소비 비율</h3>
-<p>{{ ratio }}%</p>
+  <!-- ── 소비 경보 ── -->
+  {% if danger == "보통" %}
+  <div class="alert-box alert-box--safe">
+    <i class="ti ti-circle-check"></i>
+    <div>
+      <p class="alert-title">보통</p>
+      <p class="alert-desc">{{ warning }}</p>
+    </div>
+  </div>
+  {% elif danger == "주의" %}
+  <div class="alert-box alert-box--warn">
+    <i class="ti ti-alert-triangle"></i>
+    <div>
+      <p class="alert-title">주의</p>
+      <p class="alert-desc">{{ warning }}</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert-box alert-box--danger">
+    <i class="ti ti-alert-circle"></i>
+    <div>
+      <p class="alert-title">위험</p>
+      <p class="alert-desc">{{ warning }}</p>
+    </div>
+  </div>
+  {% endif %}
 
-<h3>위험도</h3>
+  <!-- ── 요약 카드 ── -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <p class="summary-label">오늘 총 지출</p>
+      <p class="summary-value red">{{ total_spent|floatformat:0 }}</p>
+      <p class="summary-unit">원</p>
+    </div>
+    <div class="summary-card">
+      <p class="summary-label">일 목표 금액</p>
+      <p class="summary-value green">{{ daily_budget }}</p>
+      <p class="summary-unit">원</p>
+    </div>
+    <div class="summary-card">
+      <p class="summary-label">소비 비율</p>
+      <p class="summary-value {% if ratio >= 70 %}red{% elif ratio >= 50 %}yellow{% else %}green{% endif %}">{{ ratio }}</p>
+      <p class="summary-unit">%</p>
+    </div>
+    <div class="summary-card">
+      <p class="summary-label">카테고리 분석</p>
+      <p class="summary-tip">{{ category_tip }}</p>
+    </div>
+  </div>
 
-{% if danger == "보통" %}
-<p style="color:green; font-weight:bold;">
-    😊 {{ danger }}
-</p>
-
-{% elif danger == "주의" %}
-<p style="color:orange; font-weight:bold;">
-    ⚠️ {{ danger }}
-</p>
-
-{% else %}
-<p style="color:red; font-weight:bold;">
-    🚨 {{ danger }}
-</p>
-{% endif %}
-<h3>소비 분석</h3>
-<p>{{ warning }}</p>
-
-<hr>
-
-<h3>카테고리 분석</h3>
-<p>{{ category_tip }}</p>
-<hr>
-
-<h3>지출 입력</h3>
-
-<form method="POST">
-    {% csrf_token %}
-
-    <select name="category">
-        <option value="food">식비</option>
-        <option value="transport">교통비</option>
-        <option value="cafe">카페/간식</option>
-        <option value="shopping">쇼핑</option>
-        <option value="culture">문화생활</option>
-        <option value="subscription">구독</option>
-        <option value="leisure">여가비</option>
-        <option value="other">기타</option>
-    </select>
-
-    <input type="text" name="amount" placeholder="금액" style="width:160px;">
-    <input type="text" name="memo" placeholder="메모">
-
-    <button type="submit">저장</button>
-</form>
-
-<hr>
-
-<h3>지출 목록</h3>
-
-{% for ledger in ledgers %}
-    <p>
-        {{ ledger.get_category_display }} /
-        {{ ledger.amount }}원 /
-        {{ ledger.memo }}
+  <!-- ── 지출 입력 ── -->
+  <div class="section">
+    <p class="section-label">
+      <i class="ti ti-pencil"></i>
+      지출 입력
     </p>
-{% empty %}
-    <p>아직 지출 내역이 없습니다.</p>
-{% endfor %}
+    <form method="POST" class="form-group">
+      {% csrf_token %}
+      <div class="form-row">
+        <select name="category" class="form-input">
+          {% for value, label in category_choices %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <input type="number" name="amount" class="form-input" placeholder="금액" min="1">
+      </div>
+      <input type="text" name="memo" class="form-input" placeholder="메모 (선택)">
+      <button type="submit" class="btn-submit">
+        <i class="ti ti-device-floppy"></i>
+        저장
+      </button>
+    </form>
+  </div>
 
-<hr>
+  <!-- ── 지출 목록 ── -->
+  <div class="section">
+    <p class="section-label">
+      <i class="ti ti-list"></i>
+      지출 목록
+    </p>
+    <div class="ledger-list">
+      {% for ledger in ledgers %}
+      <div class="ledger-item">
+        <div class="ledger-category">
+          {% if ledger.category == 'food' %}<i class="ti ti-tools-kitchen-2"></i>
+          {% elif ledger.category == 'transport' %}<i class="ti ti-bus"></i>
+          {% elif ledger.category == 'cafe' %}<i class="ti ti-coffee"></i>
+          {% elif ledger.category == 'shopping' %}<i class="ti ti-shopping-bag"></i>
+          {% elif ledger.category == 'culture' %}<i class="ti ti-movie"></i>
+          {% elif ledger.category == 'subscription' %}<i class="ti ti-refresh"></i>
+          {% elif ledger.category == 'leisure' %}<i class="ti ti-device-gamepad"></i>
+          {% else %}<i class="ti ti-dots"></i>
+          {% endif %}
+        </div>
+        <div class="ledger-info">
+          <p class="ledger-category-name">{{ ledger.get_category_display }}</p>
+          {% if ledger.memo %}
+          <p class="ledger-memo">{{ ledger.memo }}</p>
+          {% endif %}
+        </div>
+        <span class="ledger-amount">{{ ledger.amount|floatformat:0 }}원</span>
+      </div>
+      {% empty %}
+      <p class="empty-desc">아직 지출 내역이 없습니다.</p>
+      {% endfor %}
+    </div>
+  </div>
 
-<h3>카테고리별 합계</h3>
+  <!-- ── 카테고리별 합계 ── -->
+  <div class="section">
+    <p class="section-label">
+      <i class="ti ti-chart-pie"></i>
+      카테고리별 합계
+    </p>
+    <div class="category-total-list">
+      {% for key, item in category_totals.items %}
+      {% if item.total > 0 %}
+      <div class="category-total-item">
+        <span class="category-total-label">
+          {% if key == 'food' %}<i class="ti ti-tools-kitchen-2"></i>
+          {% elif key == 'transport' %}<i class="ti ti-bus"></i>
+          {% elif key == 'cafe' %}<i class="ti ti-coffee"></i>
+          {% elif key == 'shopping' %}<i class="ti ti-shopping-bag"></i>
+          {% elif key == 'culture' %}<i class="ti ti-movie"></i>
+          {% elif key == 'subscription' %}<i class="ti ti-refresh"></i>
+          {% elif key == 'leisure' %}<i class="ti ti-device-gamepad"></i>
+          {% else %}<i class="ti ti-dots"></i>
+          {% endif %}
+          {{ item.label }}
+        </span>
+        <span class="category-total-amount">{{ item.total|floatformat:0 }}원</span>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
 
-{% for key, item in category_totals.items %}
-    <p>{{ item.label }}: {{ item.total }}원</p>
-{% endfor %}
-
-<br>
-
-<a href="{% url 'ledger:main' %}">메인으로 돌아가기</a>
-
+</div>
 </body>
 </html>
