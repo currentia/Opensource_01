@@ -14,7 +14,16 @@
 
 <h3>오늘 총 지출</h3>
 <p>{{ total_spent }}원</p>
+<hr>
 
+<h3>소비 비율</h3>
+<p>{{ ratio }}%</p>
+
+<h3>위험도</h3>
+<p>{{ danger }}</p>
+
+<h3>소비 분석</h3>
+<p>{{ warning }}</p>
 <hr>
 
 <h3>지출 입력</h3>
@@ -25,11 +34,15 @@
     <select name="category">
         <option value="food">식비</option>
         <option value="transport">교통비</option>
+        <option value="cafe">카페/간식</option>
+        <option value="shopping">쇼핑</option>
+        <option value="culture">문화생활</option>
+        <option value="subscription">구독</option>
         <option value="leisure">여가비</option>
         <option value="other">기타</option>
     </select>
 
-    <input type="number" name="amount" placeholder="금액">
+    <input type="text" name="amount" placeholder="금액" style="width:160px;">
     <input type="text" name="memo" placeholder="메모">
 
     <button type="submit">저장</button>

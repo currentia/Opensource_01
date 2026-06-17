@@ -6,11 +6,14 @@ User = settings.AUTH_USER_MODEL
 
 class Ledger(models.Model):
     CATEGORY_CHOICES = [
-        ('food',      '식비'),
-        ('transport', '교통비'),
-        ('leisure',   '여가비'),
-        ('other',     '기타'),
-        # 다른 카테고리 추가 예정
+         ('food', '식비'),
+    ('transport', '교통비'),
+    ('cafe', '카페/간식'),
+    ('shopping', '쇼핑'),
+    ('culture', '문화생활'),
+    ('subscription', '구독'),
+    ('leisure', '여가비'),
+    ('other', '기타'),
     ]
 
     user     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ledgers')
