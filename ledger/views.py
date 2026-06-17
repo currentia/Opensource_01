@@ -146,6 +146,7 @@ def detail(request, year, month, day):
         'danger': danger,
         'warning': warning,
         'category_tip': category_tip,
+        'category_choices': Ledger.CATEGORY_CHOICES, 
     }
 
     return render(request, 'ledger/detail.html', context)
