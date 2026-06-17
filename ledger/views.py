@@ -56,19 +56,18 @@ def detail(request, year, month, day):
     spent_date = date(year, month, day)
 
     if request.method == 'POST':
-        categories = request.POST.getlist('category')
-        amounts = request.POST.getlist('amount')
-        memos = request.POST.getlist('memo')
+        category = request.POST.get('category')
+        amount = request.POST.get('amount')
+        memo = request.POST.get('memo')
 
-        for category, amount, memo in zip(categories, amounts, memos):
-            if amount and int(amount) > 0:
-                Ledger.objects.create(
-                    user=user,
-                    date=spent_date,
-                    category=category,
-                    amount=int(amount),
-                    memo=memo,
-                )
+        if amount and int(amount) > 0:
+            Ledger.objects.create(
+                user=user,
+                date=spent_date,
+                category=category,
+                amount=int(amount),
+                memo=memo,
+            )
 
         total_spent = Ledger.objects.filter(
             user=user,
@@ -114,16 +113,27 @@ def detail(request, year, month, day):
         warning = "현재 지출이 안정적입니다. 지금처럼 소비를 유지해도 좋습니다."
     elif ratio_value < 0.7:
         danger = "주의"
-        if top_category:
-            warning = f"목표 금액의 50%를 넘었습니다. 오늘은 {top_category} 지출이 가장 많으니 남은 소비를 조절해보세요."
-        else:
-            warning = "목표 금액의 50%를 넘었습니다. 남은 소비를 조금 줄여보세요."
+        warning = "목표 금액의 50%를 넘었습니다. 남은 소비를 조절해보세요."
     else:
         danger = "위험"
-        if top_category:
-            warning = f"목표 금액의 70% 이상을 사용했습니다. 특히 {top_category} 지출이 많으므로 오늘은 꼭 필요한 소비만 하는 것이 좋습니다."
-        else:
-            warning = "목표 금액의 70% 이상을 사용했습니다. 오늘은 꼭 필요한 소비만 하는 것이 좋습니다."
+        warning = "목표 금액의 70% 이상을 사용했습니다. 오늘은 꼭 필요한 소비만 하는 것이 좋습니다."
+
+    if top_category == "카페/간식":
+        category_tip = "☕ 카페 지출이 많습니다. 텀블러 할인이나 집커피를 활용해보세요."
+    elif top_category == "쇼핑":
+        category_tip = "🛍️ 쇼핑 지출이 많습니다. 필요한 물건인지 한 번 더 확인해보세요."
+    elif top_category == "구독":
+        category_tip = "📺 사용하지 않는 구독 서비스가 있는지 확인해보세요."
+    elif top_category == "문화생활":
+        category_tip = "🎬 문화생활 지출이 높습니다. 이번 주 예산을 확인해보세요."
+    elif top_category == "식비":
+        category_tip = "🍔 식비 지출이 가장 높습니다. 배달 횟수를 줄여보는 건 어떨까요?"
+    elif top_category == "교통비":
+        category_tip = "🚌 교통비 지출이 많습니다. 도보나 대중교통 환승을 활용해보세요."
+    elif top_category == "여가비":
+        category_tip = "🎮 여가비 지출이 많습니다. 남은 예산을 확인해보세요."
+    else:
+        category_tip = "💰 현재 가장 높은 소비 항목을 확인해보세요."
 
     context = {
         'user': user,
@@ -135,6 +145,7 @@ def detail(request, year, month, day):
         'ratio': ratio,
         'danger': danger,
         'warning': warning,
+        'category_tip': category_tip,
     }
 
     return render(request, 'ledger/detail.html', context)

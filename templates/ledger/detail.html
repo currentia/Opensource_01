@@ -20,10 +20,29 @@
 <p>{{ ratio }}%</p>
 
 <h3>위험도</h3>
-<p>{{ danger }}</p>
 
+{% if danger == "보통" %}
+<p style="color:green; font-weight:bold;">
+    😊 {{ danger }}
+</p>
+
+{% elif danger == "주의" %}
+<p style="color:orange; font-weight:bold;">
+    ⚠️ {{ danger }}
+</p>
+
+{% else %}
+<p style="color:red; font-weight:bold;">
+    🚨 {{ danger }}
+</p>
+{% endif %}
 <h3>소비 분석</h3>
 <p>{{ warning }}</p>
+
+<hr>
+
+<h3>카테고리 분석</h3>
+<p>{{ category_tip }}</p>
 <hr>
 
 <h3>지출 입력</h3>
