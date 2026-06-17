@@ -190,3 +190,30 @@ body {
   text-align: center; font-size: 13px;
   color: var(--gray-200); padding: 1rem 0;
 }
+
+/* ── 로그아웃 버튼 ── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 0.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 7px 12px;
+  cursor: pointer;
+  color: var(--gray-600);
+  font-size: 13px;
+  font-family: 'Gowun Dodum', sans-serif;
+  transition: all 0.15s;
+}
+
+.logout-btn:hover {
+  border-color: var(--red-400);
+  color: var(--red-400);
+}

@@ -18,10 +18,19 @@
     <i class="ti ti-wallet"></i>
     MoneyMate
   </a>
-  <a href="{% url 'ledger:main' %}" class="back-btn">
-    <i class="ti ti-arrow-left"></i>
-    돌아가기
-  </a>
+  <div class="header-right">
+    <a href="{% url 'ledger:main' %}" class="back-btn">
+      <i class="ti ti-arrow-left"></i>
+      돌아가기
+    </a>
+    <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="ti ti-logout"></i>
+        로그아웃
+      </button>
+    </form>
+  </div>
 </header>
 
 <div class="container">
