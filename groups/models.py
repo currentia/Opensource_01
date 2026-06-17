@@ -2,12 +2,12 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from ledger.models import Ledger
+from django.utils import timezone
  
 User = settings.AUTH_USER_MODEL
  
 # ledger.models 의 CATEGORY_CHOICES 와 동기화
 CATEGORY_CHOICES = Ledger.CATEGORY_CHOICES
- 
  
 # ──────────────────────────────────────────────
 # 1. 모임 기본 정보
@@ -95,6 +95,11 @@ class CustomChallenge(models.Model):
     created_by   = models.ForeignKey(User,  on_delete=models.CASCADE, related_name='created_challenges')
     category     = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     amount_limit = models.PositiveIntegerField()    # 하루 해당 카테고리 지출이 이 금액 이하면 달성
+    bonus_score  = models.PositiveSmallIntegerField(
+                    default=1,
+                    validators=[MinValueValidator(1), MaxValueValidator(5)]
+                  )                                 # 달성 시 모임 점수 보너스 (1~5점)
+    expires_date = models.DateField(default=timezone.now)              # 유효 기간: 등록 당일 23:59까지
     description  = models.CharField(max_length=100, blank=True)
     created_at   = models.DateTimeField(auto_now_add=True)
  

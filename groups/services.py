@@ -99,11 +99,16 @@ def evaluate_basic_challenge(user, target_date):
 def evaluate_custom_challenge(user, target_date):
     """
     해당 날짜의 커스텀 챌린지 달성 여부를 판정하고 CustomChallengeResult 에 저장
+    - expires_date 가 target_date 와 다르면 (당일이 아니면) 건너뜀
     """
     memberships = GroupMember.objects.filter(user=user).select_related('group')
 
     for member in memberships:
         for challenge in member.group.custom_challenges.all():
+            # 유효 기간 체크: 등록 당일에만 판정
+            if challenge.expires_date != target_date:
+                continue
+
             category_spent = Ledger.objects.filter(
                 user=user,
                 date=target_date,
@@ -207,16 +212,26 @@ def check_and_update_group_score(user, group):
 
 def apply_challenge_score(user, group):
     """
-    모임 종료 시 챌린지 달성률에 따라 보너스/패널티 점수 반영
-    - 달성률 >= 0.8 → +3점 보너스
-    - 달성률 <  0.5 → -2점 패널티
-    - 그 외          → 변동 없음
-    (추후 기획에 맞게 수정 가능)
+    모임 종료 시 커스텀 챌린지 달성 결과에 따라 bonus_score 반영
+    - 달성(is_achieved=True)한 커스텀 챌린지의 bonus_score 합산 → 모임 점수에 추가
+    - 기본 챌린지 달성률 기준 패널티는 유지 (달성률 < 0.5 → -2점)
     """
     member = _get_member(group, user)
     if not member:
         return
 
+    # 커스텀 챌린지 달성 보너스 합산
+    achieved_custom = CustomChallengeResult.objects.filter(
+        challenge__group=group,
+        user=user,
+        is_achieved=True,
+    ).select_related('challenge')
+
+    bonus_total = sum(r.challenge.bonus_score for r in achieved_custom)
+    if bonus_total > 0:
+        _apply_score(member, bonus_total, 'challenge_bonus')
+
+    # 기본 챌린지 달성률 기반 패널티
     total = GroupDailyAchievement.objects.filter(group_member=member).count()
     if total == 0:
         return
@@ -227,10 +242,7 @@ def apply_challenge_score(user, group):
     ).count()
 
     ratio = achieved / total
-
-    if ratio >= 0.8:
-        _apply_score(member, +3, 'challenge_bonus')
-    elif ratio < 0.5:
+    if ratio < 0.5:
         _apply_score(member, -2, 'challenge_penalty')
 
 

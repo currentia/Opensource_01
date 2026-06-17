@@ -174,6 +174,7 @@ def group_detail(request, group_id):
     return render(request, 'groups/detail.html', {
         'group':             group,
         'd_day':             d_day,
+        'today':             today,
         'ranking':           ranking,
         'streak_info':       streak_info,
         'challenges':        challenges,
@@ -271,9 +272,11 @@ def custom_challenge_create(request, group_id):
     """
     커스텀 챌린지 등록
     POST 파라미터:
-        - category     : 카테고리
         - amount_limit : 하루 지출 한도 금액
+        - bonus_score  : 달성 시 보너스 점수 (1~5)
         - description  : 설명 (선택)
+    카테고리: 모임의 기본 챌린지 카테고리로 자동 고정
+    expires_date: 등록 당일로 자동 설정 (당일 23:59까지 유효)
     """
     group = get_object_or_404(Group, pk=group_id)
 
@@ -282,13 +285,26 @@ def custom_challenge_create(request, group_id):
         return redirect('groups:group_detail', group_id=group_id)
 
     if request.method == 'POST':
-        category     = request.POST.get('category')
         amount_limit = request.POST.get('amount_limit')
+        bonus_score  = request.POST.get('bonus_score', 1)
         description  = request.POST.get('description', '').strip()
+
+        # 기본 챌린지 카테고리 자동 설정
+        base_challenge = group.challenges.first()
+        if not base_challenge:
+            return redirect('groups:group_detail', group_id=group_id)
+        category = base_challenge.category
 
         try:
             amount_limit = int(amount_limit)
             if amount_limit <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            return redirect('groups:group_detail', group_id=group_id)
+
+        try:
+            bonus_score = int(bonus_score)
+            if not (1 <= bonus_score <= 5):
                 raise ValueError
         except (ValueError, TypeError):
             return redirect('groups:group_detail', group_id=group_id)
@@ -298,6 +314,8 @@ def custom_challenge_create(request, group_id):
             created_by=request.user,
             category=category,
             amount_limit=amount_limit,
+            bonus_score=bonus_score,
+            expires_date=timezone.now().date(),
             description=description,
         )
 
