@@ -35,8 +35,6 @@ def main(request):
         str(d): True
         for d in Ledger.objects.filter(
             user=user,
-            date__year=today.year,
-            date__month=today.month
         ).values_list('date', flat=True).distinct()
     }
 
