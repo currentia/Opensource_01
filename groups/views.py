@@ -151,7 +151,13 @@ def group_detail(request, group_id):
 
     ranking           = get_group_ranking(group)
     streak_info       = get_group_streak_info(request.user, group)
-    challenges        = group.challenges.all()
+    challenges  = [
+    {
+        'challenge': c,
+        'ratio_pct': int(c.ratio_limit * 100),
+    }
+    for c in group.challenges.all()
+    ]
     custom_challenges = group.custom_challenges.all()
     is_owner          = (group.owner == request.user)
 
