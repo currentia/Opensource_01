@@ -119,16 +119,15 @@
       챌린지
     </p>
 
-    <!-- 기본 챌린지 -->
-    {% for challenge in challenges %}
-    <div class="challenge-card challenge-card--basic">
-      <span class="challenge-type">기본</span>
-      <span class="challenge-desc">
-        하루 {{ challenge.get_category_display }} 지출이 전체의
-        <strong>{{ challenge.ratio_limit|floatformat:0 }}%</strong> 이하면 달성
-      </span>
-    </div>
-    {% endfor %}
+   {% for item in challenges %}
+  <div class="challenge-card challenge-card--basic">
+    <span class="challenge-type">기본</span>
+    <span class="challenge-desc">
+      하루 {{ item.challenge.get_category_display }} 지출이 전체의
+      <strong>{{ item.ratio_pct }}%</strong> 이하면 달성
+    </span>
+  </div>
+  {% endfor %}
 
     <!-- 커스텀 챌린지 -->
     {% for challenge in custom_challenges %}
@@ -166,7 +165,7 @@
       <form method="POST" action="{% url 'groups:custom_challenge_create' group.pk %}" class="challenge-form">
         {% csrf_token %}
         <p class="challenge-form__category-fixed">
-          카테고리: <strong>{{ challenges.0.get_category_display }}</strong> (기본 챌린지 고정)
+          카테고리: <strong>{{ challenges.0.challenge.get_category_display }}</strong> (기본 챌린지 고정)
         </p>
         <input type="number" name="amount_limit" class="form-input form-input--sm" placeholder="하루 한도 금액 (원)" min="1" required>
         <select name="bonus_score" class="form-input form-input--sm" required>
